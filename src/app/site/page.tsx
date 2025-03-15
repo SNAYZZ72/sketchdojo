@@ -1,160 +1,277 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { pricingCards } from '@/lib/constants'
-import { stripe } from '@/lib/stripe'
-import clsx from 'clsx'
-import { Check } from 'lucide-react'
-import Image from 'next/image'
-import Link from 'next/link'
+"use client"
 
-export default async function Home() {
-  const prices = await stripe.prices.list({
-    product: process.env.NEXT_PLURA_PRODUCT_ID,
-    active: true,
-  })
+import Image from "next/image"
+import { Header } from "@/components/navigation/site/header"
+import { Footer } from '@/components/navigation/site/footer'
+import { features, communityGallery, pricingPlans } from "@/components/constants/navigation"
+
+export default function Home() {
 
   return (
-    <>
-      <section className="h-full w-full md:pt-44 mt-[-70px] relative flex items-center justify-center flex-col ">
-        {/* grid */}
+    <main className="min-h-screen bg-background">
+      {/* Header Section */}
+      <Header />
 
-        <div className="absolute bottom-0 left-0 right-0 top-0 bg-[linear-gradient(to_right,#161616_1px,transparent_1px),linear-gradient(to_bottom,#161616_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)] -z-10" />
-
-        <p className="text-center">Run your agency, in one place</p>
-        <div className="bg-gradient-to-r from-primary to-secondary-foreground text-transparent bg-clip-text relative">
-          <h1 className="text-9xl font-bold text-center md:text-[300px]">
-            Plura
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center bg-[#0F1729] overflow-hidden">
+        {/* Main Content */}
+        <div className="relative z-10 text-center px-4">
+          <h1 className="font-italianno text-8xl md:text-9xl text-white mb-6">
+            SketchDojo.Ai
           </h1>
-        </div>
-        <div className="flex justify-center items-center relative md:mt-[-70px]">
-          <Image
-            src={'/assets/preview.png'}
-            alt="banner image"
-            height={1200}
-            width={1200}
-            className="rounded-tl-2xl rounded-tr-2xl border-2 border-muted"
-          />
-          <div className="bottom-0 top-[50%] bg-gradient-to-t dark:from-background left-0 right-0 absolute z-10"></div>
-        </div>
-      </section>
-      <section className="flex justify-center items-center flex-col gap-4 md:!mt-20 mt-[-60px]">
-        <h2 className="text-4xl text-center"> Choose what fits you right</h2>
-        <p className="text-muted-foreground text-center">
-          Our straightforward pricing plans are tailored to meet your needs. If
-          {" you're"} not <br />
-          ready to commit you can get started for free.
-        </p>
-        <div className="flex  justify-center gap-4 flex-wrap mt-6">
-          {prices.data.map((card) => (
-            //WIP: Wire up free product from stripe
-            <Card
-              key={card.nickname}
-              className={clsx('w-[300px] flex flex-col justify-between', {
-                'border-2 border-primary': card.nickname === 'Unlimited Saas',
-              })}
+          
+          <h3 className="title text-white/90 mb-4">
+            Create your own Manga
+          </h3>
+
+          <p className="body-text text-white/80 mb-12 max-w-2xl mx-auto">
+            Just let our AI tools guide you. Generate your characters, your world and create the story
+            of your dreams.
+          </p>
+        
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+            <button 
+              className="font-italianno text-3xl bg-white text-[#0F1729] px-8 py-3 rounded-full
+                transform transition-all hover:scale-105 hover:bg-gray-100"
             >
-              <CardHeader>
-                <CardTitle
-                  className={clsx('', {
-                    'text-muted-foreground': card.nickname !== 'Unlimited Saas',
-                  })}
-                >
-                  {card.nickname}
-                </CardTitle>
-                <CardDescription>
-                  {
-                    pricingCards.find((c) => c.title === card.nickname)
-                      ?.description
-                  }
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <span className="text-4xl font-bold">
-                  {card.unit_amount && card.unit_amount / 100}
-                </span>
-                <span className="text-muted-foreground">
-                  <span>/ {card.recurring?.interval}</span>
-                </span>
-              </CardContent>
-              <CardFooter className="flex flex-col items-start gap-4">
-                <div>
-                  {pricingCards
-                    .find((c) => c.title === card.nickname)
-                    ?.features.map((feature) => (
-                      <div
-                        key={feature}
-                        className="flex gap-2"
-                      >
-                        <Check />
-                        <p>{feature}</p>
-                      </div>
-                    ))}
-                </div>
-                <Link
-                  href={`/agency?plan=${card.id}`}
-                  className={clsx(
-                    'w-full text-center bg-primary p-2 rounded-md',
-                    {
-                      '!bg-muted-foreground':
-                        card.nickname !== 'Unlimited Saas',
-                    }
-                  )}
-                >
-                  Get Started
-                </Link>
-              </CardFooter>
-            </Card>
-          ))}
-          <Card className={clsx('w-[300px] flex flex-col justify-between')}>
-            <CardHeader>
-              <CardTitle
-                className={clsx({
-                  'text-muted-foreground': true,
-                })}
-              >
-                {pricingCards[0].title}
-              </CardTitle>
-              <CardDescription>{pricingCards[0].description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <span className="text-4xl font-bold">$0</span>
-              <span>/ month</span>
-            </CardContent>
-            <CardFooter className="flex flex-col  items-start gap-4 ">
-              <div>
-                {pricingCards
-                  .find((c) => c.title === 'Starter')
-                  ?.features.map((feature) => (
-                    <div
-                      key={feature}
-                      className="flex gap-2"
-                    >
-                      <Check />
-                      <p>{feature}</p>
-                    </div>
-                  ))}
-              </div>
-              <Link
-                href="/agency"
-                className={clsx(
-                  'w-full text-center bg-primary p-2 rounded-md',
-                  {
-                    '!bg-muted-foreground': true,
-                  }
-                )}
-              >
-                Get Started
-              </Link>
-            </CardFooter>
-          </Card>
+              Get Started
+            </button>
+            <button 
+              className="font-italianno text-3xl bg-black text-white px-8 py-3 rounded-full
+                transform transition-all hover:scale-105 hover:bg-gray-900"
+            >
+              Watch Demo
+            </button>
+          </div>
+        </div>
+
+        {/* Background Image */}
+        <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none">
+          <div className="w-full max-w-lg opacity-20 floating-image animate-floating">
+            <Image
+              src="/manga-panels.svg"
+              alt="Manga Panels"
+              width={600}
+              height={400}
+              className="w-full"
+            />
+          </div>
         </div>
       </section>
-    </>
+
+      {/* Features Section */}
+      <section id="features" className="min-h-screen py-32 px-4 bg-[#0F1729]">
+        <div className="max-w-6xl mx-auto">
+          {/* Section Title */}
+          <div className="text-center mb-20">
+            <h3 className="font-italianno text-6xl text-white mb-4">Features</h3>
+            <h4 className="subtitle text-white mb-6">Build your Manga from scratch</h4>
+            <p className="body-text text-white/80 max-w-2xl mx-auto">
+              Creating Manga has never been more accessible. With SketchDojo.ai, simply describe your 
+              vision and watch as AI brings it to life.
+            </p>
+          </div>
+
+          {/* Feature Cards */}
+          <div className="space-y-12">
+            {features.map((feature, index) => (
+              <div
+                key={index}
+                className={`feature-card bg-white/5 rounded-3xl p-8 flex flex-col ${
+                  index % 2 === 1 ? "md:flex-row-reverse" : "md:flex-row"
+                } items-center gap-8`}
+              >
+                <div className="md:w-1/2 space-y-4">
+                  <h3 className="text-2xl text-white font-semibold">{feature.title}</h3>
+                  <p className="text-white/80">{feature.description}</p>
+                </div>
+                <div className="md:w-1/2">
+                  <Image
+                    src={feature.image}
+                    alt={feature.imageAlt}
+                    width={feature.width}
+                    height={feature.height}
+                    className="rounded-xl shadow-lg"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Community Section */}
+      <section id="community" className="py-20 px-4 bg-[#0F1729]">
+        <h3 className="font-italianno text-6xl text-white text-center mb-16">
+          Community
+        </h3>
+        <h4 className="subtitle text-white text-center mb-8">
+          Join our growing community of manga creators
+        </h4>
+        <p className="body-text text-white/80 text-center max-w-2xl mx-auto mb-12">
+          Connect with fellow creators, share your work, and get inspired by others.
+        </p>
+
+        {/* Scrolling Gallery - Left to Right */}
+        <div className="overflow-hidden relative mb-8">
+          <div className="flex animate-scroll whitespace-nowrap">
+            {/* First set of images */}
+            {communityGallery.map((item, index) => (
+              <div key={`first-${index}`} className="min-w-[250px] p-4 inline-block">
+                <div className="community-card bg-white rounded-xl shadow-md p-4 transition-transform hover:scale-105">
+                  <Image
+                    src={item.image}
+                    alt={`${item.title} by ${item.author}`}
+                    width={300}
+                    height={200}
+                    className="rounded-lg w-full h-auto object-cover"
+                  />
+                  <h5 className="text-gray-800 font-medium mt-3 text-lg">{item.title}</h5>
+                  <p className="text-gray-500 text-sm">by {item.author}</p>
+                </div>
+              </div>
+            ))}
+            {/* Duplicate sets for seamless looping */}
+            {communityGallery.map((item, index) => (
+              <div key={`second-${index}`} className="min-w-[250px] p-4 inline-block">
+                <div className="community-card bg-white rounded-xl shadow-md p-4 transition-transform hover:scale-105">
+                  <Image
+                    src={item.image}
+                    alt={`${item.title} by ${item.author}`}
+                    width={300}
+                    height={200}
+                    className="rounded-lg w-full h-auto object-cover"
+                  />
+                  <h5 className="text-gray-800 font-medium mt-3 text-lg">{item.title}</h5>
+                  <p className="text-gray-500 text-sm">by {item.author}</p>
+                </div>
+              </div>
+            ))}
+            {/* Third set for extra coverage */}
+            {communityGallery.map((item, index) => (
+              <div key={`third-set-${index}`} className="min-w-[250px] p-4 inline-block">
+                <div className="community-card bg-white rounded-xl shadow-md p-4 transition-transform hover:scale-105">
+                  <Image
+                    src={item.image}
+                    alt={`${item.title} by ${item.author}`}
+                    width={300}
+                    height={200}
+                    className="rounded-lg w-full h-auto object-cover"
+                  />
+                  <h5 className="text-gray-800 font-medium mt-3 text-lg">{item.title}</h5>
+                  <p className="text-gray-500 text-sm">by {item.author}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Second Scrolling Gallery - Right to Left */}
+        <div className="overflow-hidden relative">
+          <div className="flex animate-scroll-reverse whitespace-nowrap">
+            {/* First set of images */}
+            {communityGallery.map((item, index) => (
+              <div key={`third-${index}`} className="min-w-[250px] p-4 inline-block">
+                <div className="community-card bg-white rounded-xl shadow-md p-4 transition-transform hover:scale-105">
+                  <Image
+                    src={item.image}
+                    alt={`${item.title} by ${item.author}`}
+                    width={300}
+                    height={200}
+                    className="rounded-lg w-full h-auto object-cover"
+                  />
+                  <h5 className="text-gray-800 font-medium mt-3 text-lg">{item.title}</h5>
+                  <p className="text-gray-500 text-sm">by {item.author}</p>
+                </div>
+              </div>
+            ))}
+            {/* Duplicate sets for seamless looping */}
+            {communityGallery.map((item, index) => (
+              <div key={`fourth-${index}`} className="min-w-[250px] p-4 inline-block">
+                <div className="community-card bg-white rounded-xl shadow-md p-4 transition-transform hover:scale-105">
+                  <Image
+                    src={item.image}
+                    alt={`${item.title} by ${item.author}`}
+                    width={300}
+                    height={200}
+                    className="rounded-lg w-full h-auto object-cover"
+                  />
+                  <h5 className="text-gray-800 font-medium mt-3 text-lg">{item.title}</h5>
+                  <p className="text-gray-500 text-sm">by {item.author}</p>
+                </div>
+              </div>
+            ))}
+            {/* Third set for extra coverage */}
+            {communityGallery.map((item, index) => (
+              <div key={`fourth-set-${index}`} className="min-w-[250px] p-4 inline-block">
+                <div className="community-card bg-white rounded-xl shadow-md p-4 transition-transform hover:scale-105">
+                  <Image
+                    src={item.image}
+                    alt={`${item.title} by ${item.author}`}
+                    width={300}
+                    height={200}
+                    className="rounded-lg w-full h-auto object-cover"
+                  />
+                  <h5 className="text-gray-800 font-medium mt-3 text-lg">{item.title}</h5>
+                  <p className="text-gray-500 text-sm">by {item.author}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20 px-4 bg-[#0F1729]">
+        <h3 className="font-italianno text-6xl text-white text-center mb-16">
+          Pricing
+        </h3>
+        <h4 className="subtitle text-white text-center mb-8">
+          Choose the plan that fits your needs
+        </h4>
+        <p className="body-text text-white/80 text-center max-w-2xl mx-auto mb-12">
+          From hobbyist to professional, we have a plan for everyone.
+        </p>
+
+        {/* Pricing Cards */}
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+          {pricingPlans.map((plan, index) => (
+            <div 
+              key={index} 
+              className={`bg-white rounded-xl shadow-lg overflow-hidden ${index === 1 ? 'border-2 border-[#C23FDC]' : ''}`}
+            >
+              <div className="p-8 flex flex-col items-center">
+                <h4 className={`text-2xl font-semibold mb-4 ${index === 1 ? 'text-[#C23FDC]' : 'text-gray-800'}`}>{plan.title}</h4>
+                <p className="mb-6 flex items-end">
+                  <span className="text-5xl font-bold text-gray-800">{plan.price}</span>
+                  <span className="text-gray-500 ml-1">{plan.period}</span>
+                </p>
+                <ul className="space-y-4 mb-8 w-full">
+                  {plan.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-center">
+                      <svg className={`w-5 h-5 mr-2 ${index === 1 ? 'text-[#C23FDC]' : 'text-green-500'}`} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
+                      </svg>
+                      <span className="text-gray-700">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button 
+                  className={`w-full py-3 px-6 rounded-full font-medium transition-all ${index === 1 
+                    ? 'bg-[#C23FDC] text-white hover:bg-[#A935B8]' 
+                    : 'bg-black text-white hover:bg-gray-800'}`}
+                >
+                  <a href={plan.buttonLink}>{plan.buttonText}</a>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Footer Section */}
+      <Footer />
+    </main>
   )
 }

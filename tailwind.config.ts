@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 export default {
-	darkMode: ["class"],
+	darkMode: "class",
 	content: [
 		"./pages/**/*.{ts,tsx}",
 		"./components/**/*.{ts,tsx}",
@@ -111,14 +111,31 @@ export default {
     					opacity: '1'
     				}
     			},
+    			floating: {
+    				'0%': { transform: 'translateY(0)' },
+    				'50%': { transform: 'translateY(-15px)' },
+    				'100%': { transform: 'translateY(0)' }
+    			},
+    			scroll: {
+    				'0%': { transform: 'translateX(0)' },
+    				'100%': { transform: 'translateX(-50%)' }
+    			},
+    			scrollReverse: {
+    				'0%': { transform: 'translateX(-50%)' },
+    				'100%': { transform: 'translateX(0)' }
+    			},
     		},
     		animation: {
     			'accordion-down': 'accordion-down 0.2s ease-out',
     			'accordion-up': 'accordion-up 0.2s ease-out',
     			fadeIn: 'fadeIn 0.5s ease-out',
     			scaleIn: 'scaleIn 0.3s ease-out',
+    			'floating': 'floating 3s ease-in-out infinite',
+    			'scroll': 'scroll 25s linear infinite',
+    			'scroll-reverse': 'scrollReverse 25s linear infinite',
     		}
     	}
     },
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	plugins: [require("tailwindcss-animate")],
 } satisfies Config;
