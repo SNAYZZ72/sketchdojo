@@ -11,7 +11,7 @@ export function Footer() {
         <div className="flex items-center mb-6">
           <Link href="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             <Image 
-              src="/assets/logo.svg" 
+              src="/logo/logo.svg" 
               alt="SketchDojo Logo" 
               width={50} 
               height={50} 

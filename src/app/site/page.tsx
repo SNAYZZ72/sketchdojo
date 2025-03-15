@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 import { Header } from "@/components/navigation/site/header"
 import { Footer } from '@/components/navigation/site/footer'
 import { features, communityGallery, pricingPlans } from "@/components/constants/navigation"
@@ -31,15 +32,16 @@ export default function Home() {
         
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <button 
+            <Link 
+              href="/studio/sign-up"
               className="font-italianno text-3xl bg-white text-[#0F1729] px-8 py-3 rounded-full
-                transform transition-all hover:scale-105 hover:bg-gray-100"
+                transform transition-all hover:scale-105 hover:bg-[#C23FDC] hover:text-white hover:shadow-lg hover:shadow-[#C23FDC]/30"
             >
               Get Started
-            </button>
+            </Link>
             <button 
               className="font-italianno text-3xl bg-black text-white px-8 py-3 rounded-full
-                transform transition-all hover:scale-105 hover:bg-gray-900"
+                transform transition-all hover:scale-105 hover:bg-[#C23FDC] hover:shadow-lg hover:shadow-[#C23FDC]/30"
             >
               Watch Demo
             </button>
@@ -80,19 +82,19 @@ export default function Home() {
                 key={index}
                 className={`feature-card bg-white/5 rounded-3xl p-8 flex flex-col ${
                   index % 2 === 1 ? "md:flex-row-reverse" : "md:flex-row"
-                } items-center gap-8`}
+                } items-center gap-8 transition-all duration-300 hover:bg-white/10 hover:shadow-lg hover:shadow-[#C23FDC]/20 hover:transform hover:scale-[1.02] group`}
               >
-                <div className="md:w-1/2 space-y-4">
-                  <h3 className="text-2xl text-white font-semibold">{feature.title}</h3>
-                  <p className="text-white/80">{feature.description}</p>
+                <div className="md:w-1/2 space-y-4 transition-all duration-300">
+                  <h3 className="text-2xl text-white font-semibold transition-colors duration-300 group-hover:text-[#C23FDC]">{feature.title}</h3>
+                  <p className="text-white/80 transition-colors duration-300 group-hover:text-white/90">{feature.description}</p>
                 </div>
-                <div className="md:w-1/2">
+                <div className="md:w-1/2 transition-all duration-300 group-hover:scale-[1.03]">
                   <Image
                     src={feature.image}
                     alt={feature.imageAlt}
                     width={feature.width}
                     height={feature.height}
-                    className="rounded-xl shadow-lg"
+                    className="rounded-xl shadow-lg transition-all duration-300 group-hover:shadow-xl group-hover:shadow-[#C23FDC]/10"
                   />
                 </div>
               </div>
@@ -119,48 +121,48 @@ export default function Home() {
             {/* First set of images */}
             {communityGallery.map((item, index) => (
               <div key={`first-${index}`} className="min-w-[250px] p-4 inline-block">
-                <div className="community-card bg-white rounded-xl shadow-md p-4 transition-transform hover:scale-105">
+                <div className="community-card bg-white rounded-xl shadow-md p-4 transition-all duration-300 hover:border-2 hover:border-[#C23FDC] hover:transform hover:scale-105 hover:shadow-lg hover:shadow-[#C23FDC]/20 group">
                   <Image
                     src={item.image}
                     alt={`${item.title} by ${item.author}`}
                     width={300}
                     height={200}
-                    className="rounded-lg w-full h-auto object-cover"
+                    className="rounded-lg w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                  <h5 className="text-gray-800 font-medium mt-3 text-lg">{item.title}</h5>
-                  <p className="text-gray-500 text-sm">by {item.author}</p>
+                  <h5 className="text-gray-800 font-medium mt-3 text-lg transition-colors duration-300 group-hover:text-[#C23FDC]">{item.title}</h5>
+                  <p className="text-gray-500 text-sm transition-colors duration-300 group-hover:text-[#C23FDC]/80">by {item.author}</p>
                 </div>
               </div>
             ))}
             {/* Duplicate sets for seamless looping */}
             {communityGallery.map((item, index) => (
               <div key={`second-${index}`} className="min-w-[250px] p-4 inline-block">
-                <div className="community-card bg-white rounded-xl shadow-md p-4 transition-transform hover:scale-105">
+                <div className="community-card bg-white rounded-xl shadow-md p-4 transition-all duration-300 hover:border-2 hover:border-[#C23FDC] hover:transform hover:scale-105 hover:shadow-lg hover:shadow-[#C23FDC]/20 group">
                   <Image
                     src={item.image}
                     alt={`${item.title} by ${item.author}`}
                     width={300}
                     height={200}
-                    className="rounded-lg w-full h-auto object-cover"
+                    className="rounded-lg w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                  <h5 className="text-gray-800 font-medium mt-3 text-lg">{item.title}</h5>
-                  <p className="text-gray-500 text-sm">by {item.author}</p>
+                  <h5 className="text-gray-800 font-medium mt-3 text-lg transition-colors duration-300 group-hover:text-[#C23FDC]">{item.title}</h5>
+                  <p className="text-gray-500 text-sm transition-colors duration-300 group-hover:text-[#C23FDC]/80">by {item.author}</p>
                 </div>
               </div>
             ))}
             {/* Third set for extra coverage */}
             {communityGallery.map((item, index) => (
               <div key={`third-set-${index}`} className="min-w-[250px] p-4 inline-block">
-                <div className="community-card bg-white rounded-xl shadow-md p-4 transition-transform hover:scale-105">
+                <div className="community-card bg-white rounded-xl shadow-md p-4 transition-all duration-300 hover:border-2 hover:border-[#C23FDC] hover:transform hover:scale-105 hover:shadow-lg hover:shadow-[#C23FDC]/20 group">
                   <Image
                     src={item.image}
                     alt={`${item.title} by ${item.author}`}
                     width={300}
                     height={200}
-                    className="rounded-lg w-full h-auto object-cover"
+                    className="rounded-lg w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                  <h5 className="text-gray-800 font-medium mt-3 text-lg">{item.title}</h5>
-                  <p className="text-gray-500 text-sm">by {item.author}</p>
+                  <h5 className="text-gray-800 font-medium mt-3 text-lg transition-colors duration-300 group-hover:text-[#C23FDC]">{item.title}</h5>
+                  <p className="text-gray-500 text-sm transition-colors duration-300 group-hover:text-[#C23FDC]/80">by {item.author}</p>
                 </div>
               </div>
             ))}
@@ -173,48 +175,48 @@ export default function Home() {
             {/* First set of images */}
             {communityGallery.map((item, index) => (
               <div key={`third-${index}`} className="min-w-[250px] p-4 inline-block">
-                <div className="community-card bg-white rounded-xl shadow-md p-4 transition-transform hover:scale-105">
+                <div className="community-card bg-white rounded-xl shadow-md p-4 transition-all duration-300 hover:border-2 hover:border-[#C23FDC] hover:transform hover:scale-105 hover:shadow-lg hover:shadow-[#C23FDC]/20 group">
                   <Image
                     src={item.image}
                     alt={`${item.title} by ${item.author}`}
                     width={300}
                     height={200}
-                    className="rounded-lg w-full h-auto object-cover"
+                    className="rounded-lg w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                  <h5 className="text-gray-800 font-medium mt-3 text-lg">{item.title}</h5>
-                  <p className="text-gray-500 text-sm">by {item.author}</p>
+                  <h5 className="text-gray-800 font-medium mt-3 text-lg transition-colors duration-300 group-hover:text-[#C23FDC]">{item.title}</h5>
+                  <p className="text-gray-500 text-sm transition-colors duration-300 group-hover:text-[#C23FDC]/80">by {item.author}</p>
                 </div>
               </div>
             ))}
             {/* Duplicate sets for seamless looping */}
             {communityGallery.map((item, index) => (
               <div key={`fourth-${index}`} className="min-w-[250px] p-4 inline-block">
-                <div className="community-card bg-white rounded-xl shadow-md p-4 transition-transform hover:scale-105">
+                <div className="community-card bg-white rounded-xl shadow-md p-4 transition-all duration-300 hover:border-2 hover:border-[#C23FDC] hover:transform hover:scale-105 hover:shadow-lg hover:shadow-[#C23FDC]/20 group">
                   <Image
                     src={item.image}
                     alt={`${item.title} by ${item.author}`}
                     width={300}
                     height={200}
-                    className="rounded-lg w-full h-auto object-cover"
+                    className="rounded-lg w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                  <h5 className="text-gray-800 font-medium mt-3 text-lg">{item.title}</h5>
-                  <p className="text-gray-500 text-sm">by {item.author}</p>
+                  <h5 className="text-gray-800 font-medium mt-3 text-lg transition-colors duration-300 group-hover:text-[#C23FDC]">{item.title}</h5>
+                  <p className="text-gray-500 text-sm transition-colors duration-300 group-hover:text-[#C23FDC]/80">by {item.author}</p>
                 </div>
               </div>
             ))}
             {/* Third set for extra coverage */}
             {communityGallery.map((item, index) => (
               <div key={`fourth-set-${index}`} className="min-w-[250px] p-4 inline-block">
-                <div className="community-card bg-white rounded-xl shadow-md p-4 transition-transform hover:scale-105">
+                <div className="community-card bg-white rounded-xl shadow-md p-4 transition-all duration-300 hover:border-2 hover:border-[#C23FDC] hover:transform hover:scale-105 hover:shadow-lg hover:shadow-[#C23FDC]/20 group">
                   <Image
                     src={item.image}
                     alt={`${item.title} by ${item.author}`}
                     width={300}
                     height={200}
-                    className="rounded-lg w-full h-auto object-cover"
+                    className="rounded-lg w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                  <h5 className="text-gray-800 font-medium mt-3 text-lg">{item.title}</h5>
-                  <p className="text-gray-500 text-sm">by {item.author}</p>
+                  <h5 className="text-gray-800 font-medium mt-3 text-lg transition-colors duration-300 group-hover:text-[#C23FDC]">{item.title}</h5>
+                  <p className="text-gray-500 text-sm transition-colors duration-300 group-hover:text-[#C23FDC]/80">by {item.author}</p>
                 </div>
               </div>
             ))}
@@ -239,28 +241,28 @@ export default function Home() {
           {pricingPlans.map((plan, index) => (
             <div 
               key={index} 
-              className={`bg-white rounded-xl shadow-lg overflow-hidden ${index === 1 ? 'border-2 border-[#C23FDC]' : ''}`}
+              className={`bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:border-2 hover:border-[#C23FDC] hover:transform hover:md:-translate-y-4 hover:scale-105 group`}
             >
               <div className="p-8 flex flex-col items-center">
-                <h4 className={`text-2xl font-semibold mb-4 ${index === 1 ? 'text-[#C23FDC]' : 'text-gray-800'}`}>{plan.title}</h4>
-                <p className="mb-6 flex items-end">
-                  <span className="text-5xl font-bold text-gray-800">{plan.price}</span>
-                  <span className="text-gray-500 ml-1">{plan.period}</span>
+                <h4 className={`text-2xl font-semibold mb-4 transition-colors duration-300 text-gray-800 group-hover:text-[#C23FDC]`}>{plan.title}</h4>
+                <p className="mb-6 flex items-end transition-all duration-300 group-hover:scale-110">
+                  <span className="text-5xl font-bold text-gray-800 group-hover:text-[#C23FDC]">{plan.price}</span>
+                  <span className="text-gray-500 ml-1 group-hover:text-[#C23FDC]/80">{plan.period}</span>
                 </p>
                 <ul className="space-y-4 mb-8 w-full">
                   {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center">
-                      <svg className={`w-5 h-5 mr-2 ${index === 1 ? 'text-[#C23FDC]' : 'text-green-500'}`} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <li key={idx} className="flex items-center transition-transform duration-300 hover:translate-x-1">
+                      <svg className={`w-5 h-5 mr-2 transition-all duration-300 ${index === 1 ? 'text-green-500 group-hover:text-[#C23FDC]' : 'text-green-500 group-hover:text-[#C23FDC]'} group-hover:scale-125`} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
                       </svg>
-                      <span className="text-gray-700">{feature}</span>
+                      <span className="text-gray-700 group-hover:text-gray-900 transition-colors duration-300">{feature}</span>
                     </li>
                   ))}
                 </ul>
                 <button 
-                  className={`w-full py-3 px-6 rounded-full font-medium transition-all ${index === 1 
-                    ? 'bg-[#C23FDC] text-white hover:bg-[#A935B8]' 
-                    : 'bg-black text-white hover:bg-gray-800'}`}
+                  className={`w-full py-3 px-6 rounded-full font-medium transition-all duration-300 transform hover:scale-105 ${index === 1 
+                    ? 'bg-black text-white hover:bg-[#C23FDC] group-hover:bg-[#C23FDC] hover:shadow-lg hover:shadow-[#C23FDC]/30' 
+                    : 'bg-black text-white hover:bg-gray-800 group-hover:bg-[#C23FDC]'}`}
                 >
                   <a href={plan.buttonLink}>{plan.buttonText}</a>
                 </button>

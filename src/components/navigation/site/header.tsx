@@ -30,7 +30,7 @@ export function Header() {
           <div className="flex items-center">
             <Link href="#" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
               <Image
-                src="/assets/logo.svg"
+                src="/logo/logo.svg"
                 alt="SketchDojo.ai"
                 width={40}
                 height={40}

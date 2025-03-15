@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   title: "SketchDojo.ai",
   description: "Create your own Manga with AI",
   icons: {
-    icon: 'logo.ico',
+    icon: '/logo/logo.ico',
   },
 }
 
