@@ -16,31 +16,30 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center bg-[#0F1729] overflow-hidden">
         {/* Main Content */}
-        <div className="relative z-10 text-center px-4">
-          <h1 className="font-italianno text-8xl md:text-9xl text-white mb-6">
+        <div className="relative z-10 text-center px-4 sm:px-8">
+          <h1 className="font-italianno text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-white mb-4 sm:mb-6">
             SketchDojo.Ai
           </h1>
-          
-          <h3 className="title text-white/90 mb-4">
+
+          <h3 className="title text-xl sm:text-2xl md:text-3xl text-white/90 mb-2 sm:mb-4">
             Create your own Manga
           </h3>
 
-          <p className="body-text text-white/80 mb-12 max-w-2xl mx-auto">
-            Just let our AI tools guide you. Generate your characters, your world and create the story
-            of your dreams.
+          <p className="body-text text-sm sm:text-base md:text-lg text-white/80 mb-8 sm:mb-12 max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl mx-auto">
+            Just let our AI tools guide you. Generate your characters, your world, and create the story of your dreams.
           </p>
-        
+
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <Link 
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
+            <Link
               href="/studio/sign-up"
-              className="font-italianno text-3xl bg-white text-[#0F1729] px-8 py-3 rounded-full
+              className="font-italianno text-xl sm:text-2xl md:text-3xl bg-white text-[#0F1729] px-6 sm:px-8 py-3 sm:py-4 rounded-full
                 transform transition-all hover:scale-105 hover:bg-[#C23FDC] hover:text-white hover:shadow-lg hover:shadow-[#C23FDC]/30"
             >
               Get Started
             </Link>
-            <button 
-              className="font-italianno text-3xl bg-black text-white px-8 py-3 rounded-full
+            <button
+              className="font-italianno text-xl sm:text-2xl md:text-3xl bg-black text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full
                 transform transition-all hover:scale-105 hover:bg-[#C23FDC] hover:shadow-lg hover:shadow-[#C23FDC]/30"
             >
               Watch Demo
@@ -50,13 +49,13 @@ export default function Home() {
 
         {/* Background Image */}
         <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none">
-          <div className="w-full max-w-lg opacity-20 floating-image animate-floating">
+          <div className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg opacity-20 floating-image animate-floating">
             <Image
               src="/manga-panels.svg"
               alt="Manga Panels"
               width={600}
               height={400}
-              className="w-full"
+              className="w-full h-auto"
             />
           </div>
         </div>
