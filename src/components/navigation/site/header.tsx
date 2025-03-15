@@ -54,34 +54,22 @@ export function Header() {
             </div>
 
             {/* Auth Links */}
-            <SignedIn>
-              <UserButton
-                appearance={{
-                  elements: {
-                    userButtonAvatarBox:
-                      "border-2 border-[#C23FDC] hover:border-white transition-colors duration-300 ease-in-out w-10 h-10",
-                    userButtonTrigger: "p-0",
-                    userButtonBox: "h-10 w-10",
-                  },
-                }}
-              />
-            </SignedIn>
-            <SignedOut>
-              <Link
-                href="/studio/sign-in"
-                className="font-italianno text-3xl text-white/80 hover:text-[#C23FDC] transition-colors duration-300 ease-in-out"
-              >
-                Login
-              </Link>
-              <span className="text-white text-2xl">/</span>
-              <Link
-                href="/studio/sign-up"
-                className="font-italianno text-3xl text-white/80 hover:text-[#C23FDC] transition-colors duration-300 ease-in-out"
-              >
-                Sign Up
-              </Link>
-            </SignedOut>
+            <div className="flex items-center space-x-4">
+            <Link 
+              href="/studio/sign-in" 
+              className="font-italianno text-3xl text-white/80 hover:text-[#C23FDC] transition-colors"
+            >
+              Login
+            </Link>
+            <span className="text-white text-2xl">/</span>
+            <Link 
+              href="/studio/sign-up" 
+              className="font-italianno text-3xl text-white/80 hover:text-[#C23FDC] transition-colors"
+            >
+              Sign Up
+            </Link>
           </div>
+        </div>
         </div>
 
         {/* Mobile Navigation */}
@@ -114,34 +102,21 @@ export function Header() {
 
           {/* Mobile Auth Links */}
           <div className="flex flex-col items-center space-y-4">
-            <SignedIn>
-              <UserButton
-                appearance={{
-                  elements: {
-                    userButtonAvatarBox:
-                      "border-2 border-[#C23FDC] hover:border-white transition-colors duration-300 ease-in-out w-10 h-10",
-                    userButtonTrigger: "p-0",
-                    userButtonBox: "h-10 w-10",
-                  },
-                }}
-              />
-            </SignedIn>
-            <SignedOut>
-              <Link
-                href="/studio/sign-in"
-                className="font-italianno text-lg text-white/80 hover:text-[#C23FDC] transition-colors duration-300 ease-in-out"
-                onClick={() => setIsMenuOpen(false)} // Close menu after clicking
-              >
-                Login
-              </Link>
-              <Link
-                href="/studio/sign-up"
-                className="font-italianno text-lg text-white/80 hover:text-[#C23FDC] transition-colors duration-300 ease-in-out"
-                onClick={() => setIsMenuOpen(false)} // Close menu after clicking
-              >
-                Sign Up
-              </Link>
-            </SignedOut>
+            <Link
+              href="/studio/sign-in"
+              className="font-italianno text-lg text-white/80 hover:text-[#C23FDC] transition-colors"
+              onClick={() => setIsMenuOpen(false)} // Close menu after clicking a link
+            >
+              Login
+            </Link>
+            <span className="text-white text-lg">/</span>
+            <Link
+              href="/studio/sign-up"
+              className="font-italianno text-lg text-white/80 hover:text-[#C23FDC] transition-colors"
+              onClick={() => setIsMenuOpen(false)} // Close menu after clicking a link
+            >
+              Sign Up
+            </Link>
           </div>
         </div>
       </div>

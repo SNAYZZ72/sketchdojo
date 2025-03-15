@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Poppins, Italianno } from 'next/font/google'
 import { ThemeProvider } from '@/providers/theme-provider'
-import { ClerkProvider } from '@/providers/clerk-provider'
 import './styles/globals.css'
 
 const poppins = Poppins({
@@ -33,9 +32,7 @@ export default function RootLayout({
     <html lang="en" className={`${poppins.variable} ${italianno.variable}`} suppressHydrationWarning>
       <body className={poppins.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <ClerkProvider>
-            {children}
-          </ClerkProvider>
+          {children}
         </ThemeProvider>
       </body>
     </html>
