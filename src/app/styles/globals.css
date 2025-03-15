@@ -1,37 +1,38 @@
-/* styles/globals.css */
+/* src/app/styles/globals.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 270 5% 7%;
-    --foreground: 0 0% 100%;
-    --card: 270 5% 10%;
-    --card-foreground: 0 0% 100%;
-    --popover: 270 5% 7%;
-    --popover-foreground: 0 0% 100%;
+    /* Light mode */
+    --background: 0 0% 100%;
+    --foreground: 270 5% 7%;
+    --card: 0 0% 98%;
+    --card-foreground: 270 5% 7%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 270 5% 7%;
     --primary: 267 100% 67%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 270 5% 15%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 270 5% 20%;
-    --muted-foreground: 0 0% 80%;
+    --secondary: 0 0% 93%;
+    --secondary-foreground: 270 5% 7%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 270 5% 35%;
     --accent: 267 100% 67%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
-    --border: 270 5% 15%;
-    --input: 270 5% 15%;
+    --border: 0 0% 85%;
+    --input: 0 0% 85%;
     --ring: 267 100% 67%;
     --radius: 0.5rem;
-    --sidebar-background: 270 5% 7%;
-    --sidebar-foreground: 0 0% 100%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 270 5% 7%;
     --sidebar-primary: 267 100% 67%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 270 5% 15%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 270 5% 15%;
+    --sidebar-accent: 0 0% 93%;
+    --sidebar-accent-foreground: 270 5% 7%;
+    --sidebar-border: 0 0% 85%;
     --sidebar-ring: 267 100% 67%;
   }
 

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/providers/auth-provider';
+import { ThemeToggle } from '@/components/global/theme-toggle';
 
 // Icons
 import { 
@@ -76,8 +77,8 @@ export function MainSidebar() {
     <Link 
       href={href} 
       className={cn(
-        "flex items-center gap-3 px-4 py-3 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md transition-colors",
-        active && "text-white bg-white/10"
+        "flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-white/70 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/50 dark:hover:bg-white/5 rounded-md transition-colors",
+        active && "text-gray-900 dark:text-white bg-gray-200 dark:bg-white/10"
       )}
       onClick={onClick}
     >
@@ -101,7 +102,7 @@ export function MainSidebar() {
               className="h-8 w-8"
             />
           </div>
-          <span className="font-italianno text-2xl text-white">SketchDojo.ai</span>
+          <span className="font-italianno text-2xl text-gray-900 dark:text-white">SketchDojo.ai</span>
         </Link>
         
         {/* Close button - only shown in mobile drawer */}
@@ -197,6 +198,12 @@ export function MainSidebar() {
           active={isActive('/studio/help')} 
           onClick={onNavClick}
         />
+        {/* Theme Toggle */}
+        <div className="px-4 py-2">
+          <div className="flex items-center justify-center px-4 py-2 rounded-md">
+            <ThemeToggle />
+          </div>
+        </div>
       </div>
       
       {/* User section with upgrade button */}
@@ -205,10 +212,9 @@ export function MainSidebar() {
         <Link 
           href="/studio/profile" 
           className={cn(
-            "flex items-center gap-3 px-4 py-3 text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors",
-            isActive('/studio/profile') && "text-white bg-white/10"
+            "flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-white/70 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/50 dark:hover:bg-white/5 transition-colors",
+            isActive('/studio/profile') && "text-gray-900 dark:text-white bg-gray-200 dark:bg-white/10"
           )}
-          onClick={onNavClick}
         >
           <Avatar className="h-6 w-6">
             <AvatarImage src={user?.user_metadata?.avatar_url || ''} />
@@ -221,9 +227,9 @@ export function MainSidebar() {
 
         {/* Upgrade section */}
         <div className="p-4">
-          <div className="bg-[#1A1E2C] rounded-md p-4">
-            <p className="text-sm font-medium text-white mb-1">Upgrade to Pro</p>
-            <p className="text-xs text-white/60 mb-3">Unlock all AI features and more</p>
+          <div className="bg-white dark:bg-[#1A1E2C] border border-gray-200 dark:border-transparent rounded-md p-4 shadow-sm">
+            <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">Upgrade to Pro</p>
+            <p className="text-xs text-gray-600 dark:text-white/60 mb-3">Unlock all AI features and more</p>
             <Button 
               className="w-full bg-gradient-to-r from-[#9333EA] to-[#C026D3] hover:from-[#A855F7] hover:to-[#D946EF] text-white border-0"
             >

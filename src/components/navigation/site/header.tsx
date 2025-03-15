@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { siteNavigation } from "@/components/constants/navigation";
 
 export function Header() {

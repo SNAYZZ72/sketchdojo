@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
-import ProtectedRoute from '@/components/protected-route';
+import ProtectedRoute from '@/components/global/protected-route';
 
 // Constants
 import { 

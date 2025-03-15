@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from 'react'
-import ProtectedRoute from '@/components/protected-route'
+import ProtectedRoute from '@/components/global/protected-route'
 import { useAuth } from '@/providers/auth-provider'
 import Link from 'next/link'
 import Image from 'next/image'

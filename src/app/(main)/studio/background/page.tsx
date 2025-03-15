@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
-import ProtectedRoute from '@/components/protected-route';
+import ProtectedRoute from '@/components/global/protected-route';
 import Image from 'next/image';
 
 // Constants

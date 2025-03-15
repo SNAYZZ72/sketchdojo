@@ -33,7 +33,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import ProtectedRoute from '@/components/protected-route';
+import ProtectedRoute from '@/components/global/protected-route';
 
 // Password change schema
 const passwordFormSchema = z.object({
