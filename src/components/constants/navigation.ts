@@ -177,6 +177,7 @@ export const sidebarNavigation: SidebarGroup[] = [
       { href: '/studio/projects', label: 'Projects', icon: 'Layers' },
       { href: '/studio/characters', label: 'Characters', icon: 'Users' },
       { href: '/studio/scenes', label: 'Scenes', icon: 'ImageIcon' },
+      { href: '/studio/backgrounds', label: 'Backgrounds', icon: 'ImageIcon' },
     ],
   },
   {

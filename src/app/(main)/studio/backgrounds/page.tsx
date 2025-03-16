@@ -226,12 +226,31 @@ export default function BackgroundGeneratorPage() {
       // Build the prompt from background attributes
       const prompt = buildPrompt();
       
-      // In a real implementation, this would call your AI service
-      // For this demo, we'll simulate the API call with a timeout
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Enhance the prompt for better DALL-E results
+      const enhancedPrompt = `Create a high-quality ${backgroundStyles.find(s => s.value === background.style)?.label || 'anime'} background illustration with the following details: ${prompt} The image should be detailed, atmospheric, and suitable for a manga or comic book scene.`;
       
-      // Sample image URL (in a real app, this would come from your AI service)
-      const generatedImageUrl = "/sample-background.png"; // This would be the URL returned by your API
+      // Call our API route to generate the image
+      const response = await fetch('/api/generate-background', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: enhancedPrompt,
+          size: getSelectedAspectRatioSize(),
+          quality: selectedQuality === 'high' ? 'hd' : 'standard',
+          n: 1,
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to generate background');
+      }
+      
+      // Get the generated image URL
+      const generatedImageUrl = result.data[0].url;
       
       // Add to generation history
       setGenerationHistory(prev => [...prev, generatedImageUrl]);
@@ -240,7 +259,7 @@ export default function BackgroundGeneratorPage() {
       // Store the prompt and parameters used
       setBackground(prev => ({
         ...prev,
-        prompt_used: prompt,
+        prompt_used: enhancedPrompt,
         negative_prompt: generationParams.negative_prompt,
         generation_params: {
           ...generationParams,
@@ -257,6 +276,19 @@ export default function BackgroundGeneratorPage() {
       setIsGenerating(false);
     }
   };
+
+    // Get the correct size for the selected aspect ratio
+    const getSelectedAspectRatioSize = () => {
+      const ratio = backgroundAspectRatios.find(r => r.value === aspectRatio);
+      if (ratio) {
+        if (ratio.width > ratio.height) {
+          return "1792x1024"; // Landscape
+        } else if (ratio.height > ratio.width) {
+          return "1024x1792"; // Portrait
+        }
+      }
+      return "1024x1024"; // Square (default)
+    };
   
   // Build prompt from background attributes
   const buildPrompt = () => {
@@ -546,10 +578,68 @@ export default function BackgroundGeneratorPage() {
   
   // Export background
   const exportBackground = (format: string) => {
-    // In a real implementation, this would convert the background to the selected format
-    // For now, we'll just show a toast
-    toast.success(`Background exported as ${format.toUpperCase()}`);
+    // Check if there's an image to export
+    if (generationHistory.length === 0 || currentImageIndex < 0) {
+      toast.error("No background image to export");
+      return;
+    }
+
+    const imageUrl = generationHistory[currentImageIndex];
+    
+    // Handle different export formats
+    switch (format) {
+      case 'png':
+        downloadImage(imageUrl, `background-${Date.now()}.png`);
+        break;
+      case 'jpg':
+        // For JPG, we would ideally convert the image, but for now we'll just download it
+        downloadImage(imageUrl, `background-${Date.now()}.jpg`);
+        break;
+      case 'json':
+        // Export background data as JSON
+        downloadJSON({
+          name: formState.name || 'Unnamed Background',
+          description: formState.description || '',
+          attributes: background,
+          imageUrl: imageUrl
+        }, `background-data-${Date.now()}.json`);
+        break;
+      default:
+        downloadImage(imageUrl, `background-${Date.now()}.png`);
+    }
+    
+    toast.success(`Background ${format === 'json' ? 'exported' : 'opened'} as ${format.toUpperCase()}`);
   };
+
+  // Helper function to download an image or open in new tab
+  const downloadImage = (url: string, filename: string) => {
+    // Open the image in a new tab instead of downloading
+    window.open(url, '_blank');
+    
+    // Show success message
+    toast.success(`Image opened in new tab`);
+  };
+
+  // Helper function to download JSON data
+  const downloadJSON = (data: any, filename: string) => {
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    // Create a temporary link element
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    
+    // Trigger the download
+    link.click();
+    
+    // Clean up
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   
   // Get icon for tabs
   const getTabIcon = (tabId: string) => {
@@ -1183,18 +1273,14 @@ export default function BackgroundGeneratorPage() {
                     <div className="aspect-video w-full">
                       {generationHistory.length > 0 && currentImageIndex >= 0 ? (
                         <div className="relative w-full h-full">
-                          {/* This would be the generated image */}
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <ImageIcon className="h-16 w-16 text-muted-foreground/40" />
-                          </div>
-                          
-                          {/* In a real implementation, this would use the actual image URL */}
-                          {/* <Image 
+                          {/* Display the generated image */}                          
+                          <Image 
                             src={generationHistory[currentImageIndex]} 
                             alt="Generated background" 
-                            fill 
-                            className="object-cover" 
-                          /> */}
+                            className="w-full h-full object-contain" 
+                            width={generationParams.width}
+                            height={generationParams.height}
+                          />
                         </div>
                       ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center">
@@ -1309,13 +1395,86 @@ export default function BackgroundGeneratorPage() {
                   </Dialog>
                   
                   <div className="flex gap-2 w-full">
-                    <Button variant="outline" className="flex-1">
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Regenerate
+                    <Button 
+                      variant="outline" 
+                      className="flex-1" 
+                      onClick={generateBackground} 
+                      disabled={isGenerating}
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Regenerating...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Regenerate
+                        </>
+                      )}
                     </Button>
-                    <Button variant="outline" className="flex-1">
-                      <Copy className="h-4 w-4 mr-2" />
-                      Variations
+                    <Button 
+                      variant="outline" 
+                      className="flex-1" 
+                      onClick={async () => {
+                        try {
+                          setIsGenerating(true);
+                          
+                          // Get the current prompt
+                          const prompt = buildPrompt();
+                          
+                          // Enhance the prompt for variations
+                          const enhancedPrompt = `Create a high-quality ${backgroundStyles.find(s => s.value === background.style)?.label || 'anime'} background illustration with the following details: ${prompt} The image should be detailed, atmospheric, and suitable for a manga or comic book scene. Create a variation of the existing background.`;
+                          
+                          // Call our API route to generate variations
+                          const response = await fetch('/api/generate-background', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                              prompt: enhancedPrompt,
+                              size: getSelectedAspectRatioSize(),
+                              quality: selectedQuality === 'high' ? 'hd' : 'standard',
+                              n: 1,
+                            }),
+                          });
+                          
+                          const result = await response.json();
+                          
+                          if (!response.ok) {
+                            throw new Error(result.error || 'Failed to generate background variations');
+                          }
+                          
+                          // Get the generated image URL
+                          const generatedImageUrl = result.data[0].url;
+                          
+                          // Add to generation history
+                          setGenerationHistory(prev => [...prev, generatedImageUrl]);
+                          setCurrentImageIndex(generationHistory.length);
+                          
+                          toast.success("Background variation generated successfully!");
+                          
+                        } catch (error: any) {
+                          console.error("Error generating background variation:", error);
+                          toast.error(error.message || "Failed to generate background variation. Please try again.");
+                        } finally {
+                          setIsGenerating(false);
+                        }
+                      }}
+                      disabled={isGenerating}
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4 mr-2" />
+                          Variations
+                        </>
+                      )}
                     </Button>
                   </div>
                 </CardFooter>
@@ -1330,7 +1489,7 @@ export default function BackgroundGeneratorPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex gap-4 overflow-x-auto pb-4">
-                    {generationHistory.map((image, index) => (
+                    {generationHistory.map((imageUrl, index) => (
                       <div 
                         key={index} 
                         className={cn(
@@ -1338,18 +1497,15 @@ export default function BackgroundGeneratorPage() {
                           currentImageIndex === index ? "ring-2 ring-primary" : "hover:border-primary/50"
                         )}
                         onClick={() => setCurrentImageIndex(index)}
-                      >
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
-                        </div>
-                        
+                      >                        
                         {/* In a real implementation, this would use the actual image URLs */}
-                        {/* <Image 
-                          src={image} 
+                        <Image 
+                          src={imageUrl} 
                           alt={`Generated background ${index + 1}`} 
-                          fill 
-                          className="object-cover" 
-                        /> */}
+                          className="w-full h-full object-cover" 
+                          width={generationParams.width}
+                          height={generationParams.height}
+                        />
                       </div>
                     ))}
                   </div>

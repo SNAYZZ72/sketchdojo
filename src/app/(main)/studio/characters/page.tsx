@@ -193,19 +193,39 @@ export default function CharacterGeneratorPage() {
   ];
   
   // Generate character image
+  // Generate character image
   const generateCharacter = async () => {
     try {
       setIsGenerating(true);
       
       // Build the prompt from character attributes
-      const prompt = buildPrompt();
+      let prompt = buildPrompt();
       
-      // In a real implementation, this would call your AI service
-      // For this demo, we'll simulate the API call with a timeout
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Enhance the prompt for better DALL-E results
+      const enhancedPrompt = `Create a high-quality ${characterStyles.find(s => s.value === character.style)?.label || 'anime'} character illustration with the following details: ${prompt} The image should be detailed, expressive, and fit for a manga or comic book. Make sure the character is centered and properly framed.`;
       
-      // Sample image URL (in a real app, this would come from your AI service)
-      const generatedImageUrl = "/sample-character.png"; // This would be the URL returned by your API
+      // Call our API route to generate the image
+      const response = await fetch('/api/generate-character', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: enhancedPrompt,
+          size: getSelectedAspectRatioSize(),
+          quality: selectedQuality === 'high' ? 'hd' : 'standard',
+          n: 1,
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to generate character');
+      }
+      
+      // Get the generated image URL
+      const generatedImageUrl = result.data[0].url;
       
       // Add to generation history
       setGenerationHistory(prev => [...prev, generatedImageUrl]);
@@ -214,7 +234,7 @@ export default function CharacterGeneratorPage() {
       // Store the prompt and parameters used
       setCharacter(prev => ({
         ...prev,
-        prompt_used: prompt,
+        prompt_used: enhancedPrompt,
         negative_prompt: generationParams.negative_prompt,
         generation_params: {
           ...generationParams,
@@ -224,12 +244,25 @@ export default function CharacterGeneratorPage() {
       
       toast.success("Character generated successfully!");
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating character:", error);
-      toast.error("Failed to generate character. Please try again.");
+      toast.error(error.message || "Failed to generate character. Please try again.");
     } finally {
       setIsGenerating(false);
     }
+  };
+  
+  // Get the correct size for the selected aspect ratio
+  const getSelectedAspectRatioSize = () => {
+    const ratio = characterAspectRatios.find(r => r.value === aspectRatio);
+    if (ratio) {
+      if (ratio.width > ratio.height) {
+        return "1792x1024"; // Landscape
+      } else if (ratio.height > ratio.width) {
+        return "1024x1792"; // Portrait
+      }
+    }
+    return "1024x1024"; // Square (default)
   };
   
   // Build prompt from character attributes
@@ -470,9 +503,74 @@ export default function CharacterGeneratorPage() {
   
   // Export character
   const exportCharacter = (format: string) => {
-    // In a real implementation, this would convert the character to the selected format
-    // For now, we'll just show a toast
-    toast.success(`Character exported as ${format.toUpperCase()}`);
+    // Check if there's an image to export
+    if (generationHistory.length === 0 || currentImageIndex < 0) {
+      toast.error("No character image to export");
+      return;
+    }
+
+    const imageUrl = generationHistory[currentImageIndex];
+    
+    // Handle different export formats
+    switch (format) {
+      case 'png':
+        downloadImage(imageUrl, `character-${Date.now()}.png`);
+        break;
+      case 'transparent_png':
+        // For transparent PNG, we would need to process the image to remove background
+        // This is a simplified version that just downloads the regular PNG
+        toast.info("Transparent PNG requires background removal processing");
+        downloadImage(imageUrl, `character-transparent-${Date.now()}.png`);
+        break;
+      case 'character_sheet':
+        // For a character sheet, we would generate a PDF with character details
+        // This is a simplified version that just shows a toast
+        toast.info("Character sheet export would include character details in PDF format");
+        downloadImage(imageUrl, `character-${Date.now()}.png`);
+        break;
+      case 'json':
+        // Export character data as JSON
+        downloadJSON({
+          name: formState.name || 'Unnamed Character',
+          description: formState.description || '',
+          attributes: character,
+          imageUrl: imageUrl
+        }, `character-data-${Date.now()}.json`);
+        break;
+      default:
+        downloadImage(imageUrl, `character-${Date.now()}.png`);
+    }
+    
+    toast.success(`Character ${format === 'json' ? 'exported' : 'opened'} as ${format.toUpperCase()}`);
+  };
+
+  // Helper function to download an image or open in new tab
+  const downloadImage = (url: string, filename: string) => {
+    // Open the image in a new tab instead of downloading
+    window.open(url, '_blank');
+    
+    // Show success message
+    toast.success(`Image opened in new tab`);
+  };
+
+  // Helper function to download JSON data
+  const downloadJSON = (data: any, filename: string) => {
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    // Create a temporary link element
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    
+    // Trigger the download
+    link.click();
+    
+    // Clean up
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
   
   return (
@@ -1110,21 +1208,17 @@ export default function CharacterGeneratorPage() {
                 <div className="flex justify-center items-center">
                   <div className="relative aspect-[3/4] w-full max-w-md border rounded-md overflow-hidden bg-muted">
                     {generationHistory.length > 0 && currentImageIndex >= 0 ? (
-                      <div className="relative w-full h-full">
-                        {/* This would be the generated image */}
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <ImageIcon className="h-16 w-16 text-muted-foreground/40" />
+                        <div className="relative w-full h-full">
+                          {/* Display the generated image */}
+                          <img 
+                            src={generationHistory[currentImageIndex]} 
+                            alt="Generated character" 
+                            className="w-full h-full object-contain"
+                            width={generationParams.width}
+                            height={generationParams.height} 
+                          />
                         </div>
-                        
-                        {/* In a real implementation, this would use the actual image URL */}
-                        {/* <Image 
-                          src={generationHistory[currentImageIndex]} 
-                          alt="Generated character" 
-                          fill 
-                          className="object-cover" 
-                        /> */}
-                      </div>
-                    ) : (
+                      ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center">
                         <ImageIcon className="h-16 w-16 text-muted-foreground/40 mb-4" />
                         <h3 className="text-lg font-medium mb-2">No Character Generated Yet</h3>
@@ -1236,13 +1330,86 @@ export default function CharacterGeneratorPage() {
                   </Dialog>
                   
                   <div className="flex gap-2 w-full">
-                    <Button variant="outline" className="flex-1">
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Regenerate
+                    <Button 
+                      variant="outline" 
+                      className="flex-1" 
+                      onClick={generateCharacter} 
+                      disabled={isGenerating}
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Regenerating...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Regenerate
+                        </>
+                      )}
                     </Button>
-                    <Button variant="outline" className="flex-1">
-                      <Copy className="h-4 w-4 mr-2" />
-                      Variations
+                    <Button 
+                      variant="outline" 
+                      className="flex-1" 
+                      onClick={async () => {
+                        try {
+                          setIsGenerating(true);
+                          
+                          // Get the current prompt
+                          const prompt = buildPrompt();
+                          
+                          // Enhance the prompt for variations
+                          const enhancedPrompt = `Create a high-quality ${characterStyles.find(s => s.value === character.style)?.label || 'anime'} character illustration with the following details: ${prompt} The image should be detailed, expressive, and fit for a manga or comic book. Make sure the character is centered and properly framed. Create a variation of the existing character.`;
+                          
+                          // Call our API route to generate variations
+                          const response = await fetch('/api/generate-character', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                              prompt: enhancedPrompt,
+                              size: getSelectedAspectRatioSize(),
+                              quality: selectedQuality === 'high' ? 'hd' : 'standard',
+                              n: 1,
+                            }),
+                          });
+                          
+                          const result = await response.json();
+                          
+                          if (!response.ok) {
+                            throw new Error(result.error || 'Failed to generate character variations');
+                          }
+                          
+                          // Get the generated image URL
+                          const generatedImageUrl = result.data[0].url;
+                          
+                          // Add to generation history
+                          setGenerationHistory(prev => [...prev, generatedImageUrl]);
+                          setCurrentImageIndex(generationHistory.length);
+                          
+                          toast.success("Character variation generated successfully!");
+                          
+                        } catch (error: any) {
+                          console.error("Error generating character variation:", error);
+                          toast.error(error.message || "Failed to generate character variation. Please try again.");
+                        } finally {
+                          setIsGenerating(false);
+                        }
+                      }}
+                      disabled={isGenerating}
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4 mr-2" />
+                          Variations
+                        </>
+                      )}
                     </Button>
                   </div>
                 </CardFooter>
@@ -1257,28 +1424,24 @@ export default function CharacterGeneratorPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex gap-4 overflow-x-auto pb-4">
-                    {generationHistory.map((image, index) => (
-                      <div 
-                        key={index} 
-                        className={cn(
-                          "relative min-w-[150px] h-[200px] border rounded-md cursor-pointer transition-all",
-                          currentImageIndex === index ? "ring-2 ring-primary" : "hover:border-primary/50"
-                        )}
-                        onClick={() => setCurrentImageIndex(index)}
-                      >
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
+                    {generationHistory.map((imageUrl, index) => (
+                        <div 
+                          key={index} 
+                          className={cn(
+                            "relative min-w-[150px] h-[200px] border rounded-md cursor-pointer transition-all",
+                            currentImageIndex === index ? "ring-2 ring-primary" : "hover:border-primary/50"
+                          )}
+                          onClick={() => setCurrentImageIndex(index)}
+                        >
+                          <img 
+                            src={imageUrl} 
+                            alt={`Generated character ${index + 1}`} 
+                            className="w-full h-full object-cover"
+                            width={generationParams.width}
+                            height={generationParams.height}
+                          />
                         </div>
-                        
-                        {/* In a real implementation, this would use the actual image URLs */}
-                        {/* <Image 
-                          src={image} 
-                          alt={`Generated character ${index + 1}`} 
-                          fill 
-                          className="object-cover" 
-                        /> */}
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 </CardContent>
               </Card>
