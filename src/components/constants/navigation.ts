@@ -134,3 +134,79 @@ export const communityGallery = [
     image: '/community/chill-desirus.png',
   },
 ]
+
+// Footer navigation links
+export const footerNavigation = {
+  main: [
+    { name: 'Pricing', href: '#pricing' },
+    { name: 'Community', href: '#community' },
+    { name: 'About us', href: '#about' },
+    { name: 'Contact', href: '#contact' },
+  ],
+  legal: [
+    { name: 'Privacy Policy', href: '#privacy' },
+    { name: 'Terms of Service', href: '#terms' },
+    { name: 'Cookie Policy', href: '#cookies' },
+  ],
+  social: [
+    { name: 'TikTok', href: '#', icon: 'tiktok' },
+    { name: 'YouTube', href: '#', icon: 'youtube' },
+    { name: 'Instagram', href: '#', icon: 'instagram' },
+  ]
+};
+
+// Navigation item structure
+export interface SidebarItem {
+  href: string;
+  label: string;
+  icon: string; // Icon name from Lucide icons
+}
+
+// Navigation groups for sidebar
+export interface SidebarGroup {
+  title?: string; // Optional group title for sections
+  items: SidebarItem[];
+}
+
+// Main sidebar navigation
+export const sidebarNavigation: SidebarGroup[] = [
+  {
+    // Core Navigation
+    items: [
+      { href: '/studio', label: 'Dashboard', icon: 'Home' },
+      { href: '/studio/projects', label: 'Projects', icon: 'Layers' },
+      { href: '/studio/characters', label: 'Characters', icon: 'Users' },
+      { href: '/studio/scenes', label: 'Scenes', icon: 'ImageIcon' },
+    ],
+  },
+  {
+    title: 'AI Tools',
+    items: [
+      { href: '/studio/tools/generator', label: 'Image Generator', icon: 'Wand2' },
+      { href: '/studio/tools/inpainting', label: 'Inpainting', icon: 'Palette' },
+      { href: '/studio/tools/training', label: 'Character Training', icon: 'Sparkles' },
+      { href: '/studio/tools/pose-creator', label: 'Pose Creator', icon: 'LayoutGrid' },
+      { href: '/studio/tools/layout-creator', label: 'Layout Creator', icon: 'LayoutGrid' },
+      { href: '/studio/tools/upscale', label: 'Upscale', icon: 'ArrowUp' },
+      { href: '/studio/tools/ai-assistant', label: 'AI Assistant', icon: 'ChatBubble' },
+      { href: '/studio/tools/translation', label: 'Translation', icon: 'Translate' },
+      { href: '/studio/tools/voice-acting', label: 'Voice Acting', icon: 'Microphone' },
+      { href: '/studio/tools/storyboard', label: 'Storyboard', icon: 'LayoutGrid' },
+      { href: '/studio/tools/cover-design', label: 'Cover Design', icon: 'LayoutGrid' },
+      { href: '/studio/tools/Chapters', label: 'Chapters', icon: 'LayoutGrid' },
+    ],
+  },
+  {
+    title: 'Resources',
+    items: [
+      { href: '/studio/templates', label: 'Templates', icon: 'BookOpen' },
+    ],
+  },
+  {
+    // Settings & Help
+    items: [
+      { href: '/studio/settings', label: 'Settings', icon: 'Settings' },
+      { href: '/studio/help', label: 'Help', icon: 'HelpCircle' },
+    ],
+  },
+];

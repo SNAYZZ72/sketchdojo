@@ -219,7 +219,6 @@ export default function SceneGeneratorPage() {
   const [dialogEditorOpen, setDialogEditorOpen] = useState(false);
   const [characterMenuOpen, setCharacterMenuOpen] = useState(false);
   const [selectedPanel, setSelectedPanel] = useState<number | null>(null);
-  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   
   // Temporary character dialog state
   const [currentDialogText, setCurrentDialogText] = useState('');
@@ -420,9 +419,6 @@ export default function SceneGeneratorPage() {
         toast.error("You must be logged in to save a scene");
         return;
       }
-      
-      // In a real implementation, this would save to your database
-      // For now, we'll simulate success
       
       // Create scene in Supabase
       const { data, error } = await supabase
@@ -635,7 +631,6 @@ export default function SceneGeneratorPage() {
   // Export scene
   const exportScene = (format: string) => {
     // In a real implementation, this would convert the scene to the selected format
-    // For now, we'll just show a toast
     toast.success(`Scene exported as ${format.toUpperCase()}`);
   };
   
@@ -651,13 +646,19 @@ export default function SceneGeneratorPage() {
     }
   }, [aspectRatio]);
   
+  // Fix: Add effect to update currentImageIndex when generationHistory changes
+  useEffect(() => {
+    if (generationHistory.length > 0 && currentImageIndex === -1) {
+      setCurrentImageIndex(generationHistory.length - 1);
+    }
+  }, [generationHistory, currentImageIndex]);
+  
   return (
     <ProtectedRoute>
       <div className="container max-w-full px-0 py-0 overflow-hidden">
         <div className="flex flex-row h-[calc(100vh-64px)]">
           {/* Left Panel - Scene Configuration */}
-          <div className={`${leftPanelCollapsed ? 'w-0' : 'w-80'} h-full flex flex-col transition-all duration-300 border-r`}>
-            {!leftPanelCollapsed && (
+          <div className="w-80 h-full flex flex-col border-r overflow-hidden">
               <>
                 <div className="flex items-center justify-between p-4 border-b">
                   <h2 className="text-lg font-semibold">Scene Generator</h2>
@@ -670,22 +671,14 @@ export default function SceneGeneratorPage() {
                       </TooltipTrigger>
                       <TooltipContent>Randomize Scene</TooltipContent>
                     </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" onClick={() => setLeftPanelCollapsed(true)} className="h-8 w-8">
-                          <PanelLeftClose className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Collapse Panel</TooltipContent>
-                    </Tooltip>
                   </div>
                 </div>
                 
                 <div className="flex-1 overflow-y-auto p-0">
                   <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="w-full grid grid-cols-5 sticky top-0 z-10">
+                    <TabsList className="w-full grid grid-cols-5 sticky top-0 z-10 bg-background">
                       {sceneGeneratorTabs.map(tab => (
-                        <TabsTrigger key={tab.id} value={tab.id} className="text-xs py-1">
+                        <TabsTrigger key={tab.id} value={tab.id} className="text-xs py-2 px-3">
                           {tab.label}
                         </TabsTrigger>
                       ))}
@@ -1092,42 +1085,6 @@ export default function SceneGeneratorPage() {
                             </Button>
                           </div>
                         )}
-                        
-                        {/* Character Selection Dialog */}
-                        <Drawer open={characterMenuOpen} onOpenChange={setCharacterMenuOpen}>
-                          <DrawerContent>
-                            <DrawerHeader>
-                              <DrawerTitle>Select Character</DrawerTitle>
-                              <DrawerDescription>Choose a character to add to your scene</DrawerDescription>
-                            </DrawerHeader>
-                            <div className="p-4 grid grid-cols-2 gap-3 max-h-80 overflow-y-auto">
-                              {mockCharacters.map(character => (
-                                <div
-                                  key={character.id}
-                                  className="border rounded-md p-3 cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-all"
-                                  onClick={() => addCharacterToScene(character)}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
-                                      {character.name?.[0] || "?"}
-                                    </div>
-                                    <div>
-                                      <p className="font-medium">{character.name}</p>
-                                      <p className="text-xs text-muted-foreground">
-                                        {character.metadata?.gender}, {character.metadata?.age}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                            <DrawerFooter>
-                              <Button variant="outline" onClick={() => setCharacterMenuOpen(false)}>
-                                Cancel
-                              </Button>
-                            </DrawerFooter>
-                          </DrawerContent>
-                        </Drawer>
                       </div>
                     </TabsContent>
                     
@@ -1192,98 +1149,6 @@ export default function SceneGeneratorPage() {
                             </Button>
                           </div>
                         )}
-                        
-                        {/* Dialog Editor Dialog */}
-                        <Dialog open={dialogEditorOpen} onOpenChange={setDialogEditorOpen}>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Add Dialog</DialogTitle>
-                              <DialogDescription>Add speech or thought bubbles to your characters</DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4 py-4">
-                              <div className="space-y-2">
-                                <Label>Character</Label>
-                                <Select 
-                                  value={currentDialogCharacter || ""} 
-                                  onValueChange={setCurrentDialogCharacter}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select a character" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="">Narrator</SelectItem>
-                                    {scene.characters?.map(character => (
-                                      <SelectItem key={character.id} value={character.id || ""}>
-                                        {character.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              
-                              <div className="space-y-2">
-                                <Label>Dialog Text</Label>
-                                <Textarea 
-                                  value={currentDialogText}
-                                  onChange={e => setCurrentDialogText(e.target.value)}
-                                  placeholder="Enter dialog text..."
-                                  className="resize-none h-24"
-                                />
-                              </div>
-                              
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label>Bubble Type</Label>
-                                  <Select 
-                                    value={currentDialogType} 
-                                    onValueChange={setCurrentDialogType}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {dialogBubbleOptions.map(option => (
-                                        <SelectItem key={option.value} value={option.value}>
-                                          {option.label}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                
-                                <div className="space-y-2">
-                                  <Label>Position</Label>
-                                  <Select 
-                                    value={currentDialogPosition} 
-                                    onValueChange={setCurrentDialogPosition}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {characterPositionOptions.map(option => (
-                                        <SelectItem key={option.value} value={option.value}>
-                                          {option.label}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </div>
-                            </div>
-                            <DialogFooter>
-                              <Button variant="outline" onClick={() => setDialogEditorOpen(false)}>
-                                Cancel
-                              </Button>
-                              <Button 
-                                onClick={addDialogToScene}
-                                disabled={!currentDialogText.trim()}
-                              >
-                                Add Dialog
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
                       </div>
                     </TabsContent>
                     
@@ -1473,22 +1338,9 @@ export default function SceneGeneratorPage() {
                   </Button>
                 </div>
               </>
-            )}
           </div>
           
-          {/* Collapse/Expand Button when collapsed */}
-          {leftPanelCollapsed && (
-            <div className="absolute left-2 top-4 z-50">
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={() => setLeftPanelCollapsed(false)}
-                className="h-8 w-8 rounded-full bg-card shadow-md"
-              >
-                <PanelRightClose className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+          {/* Panel controls removed */}
           
           {/* Main Canvas Area */}
           <div className="flex-1 overflow-hidden bg-background relative p-8 flex flex-col">
@@ -1810,6 +1662,134 @@ export default function SceneGeneratorPage() {
             )}
           </div>
         </div>
+        
+        {/* Character Selection Dialog */}
+        <Drawer open={characterMenuOpen} onOpenChange={setCharacterMenuOpen}>
+          <DrawerContent className="max-h-[90vh]">
+            <DrawerHeader>
+              <DrawerTitle>Select Character</DrawerTitle>
+              <DrawerDescription>Choose a character to add to your scene</DrawerDescription>
+            </DrawerHeader>
+            <div className="p-4 grid grid-cols-2 gap-3 max-h-80 overflow-y-auto">
+              {mockCharacters.map(character => (
+                <div
+                  key={character.id}
+                  className="border rounded-md p-3 cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-all"
+                  onClick={() => addCharacterToScene(character)}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
+                      {character.name?.[0] || "?"}
+                    </div>
+                    <div>
+                      <p className="font-medium">{character.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {character.metadata?.gender}, {character.metadata?.age}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <DrawerFooter>
+              <Button variant="outline" onClick={() => setCharacterMenuOpen(false)}>
+                Cancel
+              </Button>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+        
+        {/* Dialog Editor Dialog */}
+        <Dialog open={dialogEditorOpen} onOpenChange={setDialogEditorOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Dialog</DialogTitle>
+              <DialogDescription>Add speech or thought bubbles to your characters</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Character</Label>
+                <Select 
+                  value={currentDialogCharacter || ""} 
+                  onValueChange={setCurrentDialogCharacter}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a character" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Narrator</SelectItem>
+                    {scene.characters?.map(character => (
+                      <SelectItem key={character.id} value={character.id || ""}>
+                        {character.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Dialog Text</Label>
+                <Textarea 
+                  value={currentDialogText}
+                  onChange={e => setCurrentDialogText(e.target.value)}
+                  placeholder="Enter dialog text..."
+                  className="resize-none h-24"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Bubble Type</Label>
+                  <Select 
+                    value={currentDialogType} 
+                    onValueChange={setCurrentDialogType}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {dialogBubbleOptions.map(option => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Position</Label>
+                  <Select 
+                    value={currentDialogPosition} 
+                    onValueChange={setCurrentDialogPosition}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {characterPositionOptions.map(option => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDialogEditorOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={addDialogToScene}
+                disabled={!currentDialogText.trim()}
+              >
+                Add Dialog
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         
         {/* Panel Editor Drawer */}
         <Drawer open={panelEditorOpen} onOpenChange={setPanelEditorOpen} modal={false}>
