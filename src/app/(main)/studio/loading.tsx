@@ -1,12 +1,20 @@
-import Loading from '@/components/global/loading'
-import React from 'react'
+import LoadingPage from '@/components/global/loading-page';
+import React from 'react';
 
-const LoadingAgencyPage = () => {
+/**
+ * Loading page component for the Studio section
+ * Uses the enhanced LoadingPage with a themed appearance
+ */
+const StudioLoadingPage = () => {
   return (
-    <div className="h-screen w-screen flex justify-center items-center">
-      <Loading></Loading>
-    </div>
-  )
-}
+    <LoadingPage 
+      message="Loading Studio"
+      subMessage="Preparing your workspace..."
+      spinnerSize="lg"
+      theme="primary"
+      delayMs={300} // Prevents flashing for fast loads
+    />
+  );
+};
 
-export default LoadingAgencyPage
+export default StudioLoadingPage;

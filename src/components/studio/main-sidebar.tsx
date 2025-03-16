@@ -32,7 +32,12 @@ import {
   LayoutGrid,
   MessageCircle as ChatBubble,
   Languages as Translate,
-  Mic as Microphone
+  Mic as Microphone,
+  Film,
+  UserSquare,
+  Bot,
+  Columns,
+  BookCopy
 } from 'lucide-react';
 
 // UI Components
@@ -153,19 +158,26 @@ export function MainSidebar() {
       case 'Home': return <Home className={size} />;
       case 'Layers': return <Layers className={size} />;
       case 'Users': return <Users className={size} />;
+      case 'Film': return <Film className={size} />;
+      case 'Image': return <ImageIcon className={size} />;
       case 'ImageIcon': return <ImageIcon className={size} />;
       case 'Wand2': return <Wand2 className={size} />;
       case 'Palette': return <Palette className={size} />;
       case 'Sparkles': return <Sparkles className={size} />;
+      case 'UserSquare': return <UserSquare className={size} />;
       case 'BookOpen': return <BookOpen className={size} />;
       case 'Settings': return <Settings className={size} />;
       case 'HelpCircle': return <HelpCircle className={size} />;
       case 'User': return <User className={size} />;
       case 'ArrowUp': return <ArrowUp className={size} />;
       case 'LayoutGrid': return <LayoutGrid className={size} />;
+      case 'Bot': return <Bot className={size} />;
       case 'ChatBubble': return <ChatBubble className={size} />;
+      case 'Languages': return <Translate className={size} />;
       case 'Translate': return <Translate className={size} />;
       case 'Microphone': return <Microphone className={size} />;
+      case 'Columns': return <Columns className={size} />;
+      case 'BookCopy': return <BookCopy className={size} />;
       default: return <div className={size} />;
     }
   };

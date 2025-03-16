@@ -14,7 +14,8 @@ const StudioLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <AuthProvider>
       {/* Toast notifications */}
-      <Toaster position="top-center" />
+
+      <Toaster position="bottom-right" />
       
       {/* Main content */}
       {children}

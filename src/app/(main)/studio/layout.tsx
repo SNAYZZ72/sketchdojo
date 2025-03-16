@@ -3,7 +3,7 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import { AuthProvider } from '@/providers/auth-provider';
-import { Toaster } from 'sonner';
+// import { Toaster } from 'sonner';
 import { MainSidebar } from '@/components/studio/main-sidebar';
 
 const StudioLayout = ({ children }: { children: React.ReactNode }) => {
@@ -15,7 +15,7 @@ const StudioLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <AuthProvider>
       {/* Toast notifications */}
-      <Toaster position="top-center" />
+      {/* <Toaster position="top-center" /> */}
       
       {isAuthPath ? (
         // For auth pages, just show the content without sidebar
