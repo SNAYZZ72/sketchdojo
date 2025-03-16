@@ -53,12 +53,17 @@ export default {
     				'text-muted': 'rgba(255, 255, 255, 0.8)',
     				'text-subtle': 'rgba(255, 255, 255, 0.6)',
     			},
+    			// Generator app colors
     			primary: {
-    				DEFAULT: 'hsl(var(--primary))',
+    				DEFAULT: '#5667FF',
+    				light: '#7A8AFF',
+    				dark: '#3A4AE0',
     				foreground: 'hsl(var(--primary-foreground))'
     			},
     			secondary: {
-    				DEFAULT: 'hsl(var(--secondary))',
+    				DEFAULT: '#FF56A9',
+    				light: '#FF7AB9',
+    				dark: '#E03A8A',
     				foreground: 'hsl(var(--secondary-foreground))'
     			},
     			destructive: {
@@ -148,8 +153,8 @@ export default {
           			'50%': { opacity: '0.5' },
         		},
         		glow: {
-          			'0%, 100%': { boxShadow: '0 0 15px rgba(194, 63, 220, 0.5)' },
-          			'50%': { boxShadow: '0 0 30px rgba(194, 63, 220, 0.8)' },
+          			'0%, 100%': { boxShadow: '0 0 15px rgba(86, 103, 255, 0.5)' },
+          			'50%': { boxShadow: '0 0 30px rgba(86, 103, 255, 0.8)' },
         		},
         		shimmer: {
           			'0%': { backgroundPosition: '-200% 0' },
@@ -174,6 +179,9 @@ export default {
         		'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         		'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
         		'text-gradient': 'linear-gradient(to right, #C23FDC, #5B73FF)',
+                'primary-gradient': 'linear-gradient(90deg, #5667FF 0%, #FF56A9 100%)',
+                'hover-primary-gradient': 'linear-gradient(90deg, #4A5AE0 0%, #E03A8A 100%)',
+                'background-gradient': 'linear-gradient(180deg, #121218 0%, #1E1E28 100%)'
       		},
       		backdropFilter: {
         		'none': 'none',
