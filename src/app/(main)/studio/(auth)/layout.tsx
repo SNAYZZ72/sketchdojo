@@ -1,9 +1,13 @@
-import React from 'react'
+import React from 'react';
 
-const AuthLayout = ({ children }: { children: React.ReactNode }) => {
+export default function AuthFullscreenLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <div className="h-full flex items-center justify-center">{children}</div>
-  )
+    <div className="min-h-screen w-full bg-sketchdojo-bg">
+      {children}
+    </div>
+  );
 }
-
-export default AuthLayout

@@ -27,16 +27,24 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  PanelLeft,
-  PanelRight
+  Star
 } from 'lucide-react';
 
 // UI Components
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { motion } from 'framer-motion';
 
 // Local storage key for sidebar state
 const SIDEBAR_STATE_KEY = 'sketchdojo-sidebar-collapsed';
@@ -94,6 +102,15 @@ export function MainSidebar() {
     }
     return path !== '/studio' && pathname.startsWith(path);
   };
+  
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   // Helper function to get the icon component based on icon name
   const getIconComponent = (iconName: string) => {
@@ -124,13 +141,22 @@ export function MainSidebar() {
     <Link 
       href={href} 
       className={cn(
-        "flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-white/70 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/50 dark:hover:bg-white/5 rounded-md transition-colors",
-        active && "text-gray-900 dark:text-white bg-gray-200 dark:bg-white/10"
+        "flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-white/70 hover:text-sketchdojo-primary dark:hover:text-white hover:bg-gray-200/50 dark:hover:bg-white/10 rounded-md transition-colors relative",
+        active && "text-sketchdojo-primary dark:text-white bg-gray-100 dark:bg-white/10 font-medium"
       )}
       onClick={onClick}
     >
-      {icon}
-      {!isCollapsed && <span>{label}</span>}
+      <div className="relative z-10 text-inherit">
+        {icon}
+      </div>
+      
+      {!isCollapsed && (
+        <span className="relative z-10">{label}</span>
+      )}
+      
+      {active && (
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-sketchdojo-primary to-sketchdojo-accent rounded-r-md" />
+      )}
     </Link>
   );
   
@@ -150,15 +176,19 @@ export function MainSidebar() {
               <Link 
                 href={href} 
                 className={cn(
-                  "flex items-center justify-center w-10 h-10 my-1 text-gray-700 dark:text-white/70 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/50 dark:hover:bg-white/5 rounded-md transition-colors",
-                  active && "text-gray-900 dark:text-white bg-gray-200 dark:bg-white/10"
+                  "flex items-center justify-center w-10 h-10 my-1 text-gray-700 dark:text-white/70 hover:text-sketchdojo-primary dark:hover:text-white hover:bg-gray-200/50 dark:hover:bg-white/10 rounded-md transition-colors relative",
+                  active && "text-sketchdojo-primary dark:text-white bg-gray-100 dark:bg-white/10"
                 )}
                 onClick={onClick}
               >
                 {icon}
+                
+                {active && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-sketchdojo-primary to-sketchdojo-accent rounded-r-md" />
+                )}
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="right" align="center">
+            <TooltipContent side="right" align="center" className="bg-gray-800 text-white border-gray-700">
               {label}
             </TooltipContent>
           </Tooltip>
@@ -186,20 +216,24 @@ export function MainSidebar() {
         isCollapsed ? "justify-center" : "justify-between"
       )}>
         <Link href="/studio" className={cn(
-          "flex items-center gap-2",
+          "flex items-center gap-2 group",
           isCollapsed && "justify-center"
         )}>
-          <div className="flex shrink-0 items-center justify-center rounded-full">
+          <div className="flex shrink-0 items-center justify-center rounded-full relative overflow-hidden">
             <Image
               src="/logo/logo.svg"
               alt="SketchDojo.ai"
               width={32}
               height={32}
-              className="h-8 w-8 dark:invert-0 invert" 
+              className="h-8 w-8 dark:invert-0 invert z-10 relative" 
             />
+            <div className="absolute inset-0 bg-gradient-to-tr from-sketchdojo-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </div>
+          
           {!isCollapsed && (
-            <span className="font-italianno text-2xl font-bold text-black dark:text-white">SketchDojo.ai</span>
+            <span className="font-italianno text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-black to-black/80 dark:from-white dark:to-white/80 group-hover:from-sketchdojo-primary group-hover:to-sketchdojo-accent transition-all duration-300">
+              SketchDojo<span className="text-sketchdojo-primary">.ai</span>
+            </span>
           )}
         </Link>
         
@@ -207,7 +241,7 @@ export function MainSidebar() {
         {isMobileView && (
           <button 
             onClick={onNavClick}
-            className="text-white/70 hover:text-white p-1"
+            className="text-white/70 hover:text-white p-1 transition-colors duration-300"
           >
             <X className="h-5 w-5" />
           </button>
@@ -215,13 +249,15 @@ export function MainSidebar() {
       </div>
       
       {/* Main Navigation */}
-      <div className="mt-2 px-2 flex-1 overflow-y-auto">
+      <div className="mt-2 px-2 flex-1 overflow-y-auto custom-scrollbar">
         {/* Render navigation groups from constants */}
         {sidebarNavigation.map((group, groupIndex) => (
           <div key={groupIndex} className={cn("mb-4", isCollapsed && "flex flex-col items-center")}>
             {/* Render group title if it exists and sidebar is not collapsed */}
             {group.title && !isCollapsed && (
-              <div className="mt-4 mb-2 px-4 text-xs text-gray-600 dark:text-white/40 uppercase">{group.title}</div>
+              <div className="mt-4 mb-2 px-4 text-xs font-medium text-gray-400 dark:text-white/40 uppercase tracking-wider">
+                {group.title}
+              </div>
             )}
             
             {/* Add spacer when collapsed */}
@@ -247,7 +283,7 @@ export function MainSidebar() {
       </div>
       
       {/* User section with upgrade button */}
-      <div className="mt-auto border-t border-gray-200 dark:border-white/10">
+      <div className="mt-auto border-t border-gray-200 dark:border-white/10 pt-2">
         {/* Profile section with theme toggle */}
         <div className={cn(
           "px-4 py-3",
@@ -255,40 +291,86 @@ export function MainSidebar() {
         )}>
           {isCollapsed ? (
             <>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Link href="/studio/profile">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user?.user_metadata?.avatar_url || ''} />
-                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                          {getInitials()}
-                        </AvatarFallback>
-                      </Avatar>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="relative group focus:outline-none">
+                    <Avatar className="h-8 w-8 border-2 border-transparent hover:border-sketchdojo-primary transition-colors duration-300">
+                      <AvatarImage src={user?.user_metadata?.avatar_url || ''} />
+                      <AvatarFallback className="bg-gradient-to-br from-sketchdojo-primary to-sketchdojo-accent text-white text-xs">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sketchdojo-primary opacity-50"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-sketchdojo-primary"></span>
+                    </span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 mt-1">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/studio/profile" className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" /> Profile
                     </Link>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">Profile</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/studio/settings" className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" /> Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-500 focus:text-red-500 cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" /> Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <ThemeToggle />
             </>
           ) : (
             <>
-              <Link 
-                href="/studio/profile" 
-                className={cn(
-                  "flex items-center gap-3 text-sm text-gray-700 dark:text-white/70 hover:text-gray-900 dark:hover:text-white transition-colors",
-                  isActive('/studio/profile') && "text-gray-900 dark:text-white"
-                )}
-              >
-                <Avatar className="h-6 w-6">
-                  <AvatarImage src={user?.user_metadata?.avatar_url || ''} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                    {getInitials()}
-                  </AvatarFallback>
-                </Avatar>
-                <span>Profile</span>
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-3 text-sm text-gray-700 dark:text-white/70 hover:text-gray-900 dark:hover:text-white transition-colors group focus:outline-none">
+                    <Avatar className="h-8 w-8 border-2 border-transparent group-hover:border-sketchdojo-primary transition-colors duration-300">
+                      <AvatarImage src={user?.user_metadata?.avatar_url || ''} />
+                      <AvatarFallback className="bg-gradient-to-br from-sketchdojo-primary to-sketchdojo-accent text-white text-xs">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col text-left">
+                      <span className="font-medium leading-none">{user?.email?.split('@')[0] || 'User'}</span>
+                      <span className="text-xs text-gray-500 dark:text-white/40 mt-0.5">Free plan</span>
+                    </div>
+                    
+                    <div className="ml-auto flex h-4 w-4 items-center justify-center">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sketchdojo-primary opacity-50"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-sketchdojo-primary"></span>
+                      </span>
+                    </div>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/studio/profile" className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" /> Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/studio/settings" className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" /> Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-500 focus:text-red-500 cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" /> Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <ThemeToggle />
             </>
           )}
@@ -297,15 +379,25 @@ export function MainSidebar() {
         {/* Upgrade section - only shown when not collapsed */}
         {!isCollapsed && (
           <div className="p-4">
-            <div className="bg-white dark:bg-[#1A1E2C] border border-gray-200 dark:border-transparent rounded-md p-4 shadow-sm">
-              <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">Upgrade to Pro</p>
-              <p className="text-xs text-gray-600 dark:text-white/60 mb-3">Unlock all AI features and more</p>
-              <Button 
-                className="w-full bg-gradient-to-r from-[#9333EA] to-[#C026D3] hover:from-[#A855F7] hover:to-[#D946EF] text-white border-0"
-              >
-                <CreditCard className="h-4 w-4 mr-2" />
-                Upgrade
-              </Button>
+            <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-[#1A1E2C] border border-gray-200 dark:border-gray-800 rounded-lg p-4 shadow-sm">
+              <div className="absolute -top-12 -right-12 w-24 h-24 bg-gradient-to-br from-sketchdojo-primary/20 to-sketchdojo-accent/20 rounded-full blur-xl"></div>
+              <div className="relative z-10">
+                <div className="flex items-start">
+                  <div>
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">Upgrade to Pro</p>
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-white/60 mb-3 mt-1">Unlock all AI features and more</p>
+                  </div>
+                </div>
+                <Button 
+                  className="w-full bg-gradient-to-r from-sketchdojo-primary to-sketchdojo-accent hover:opacity-90 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Upgrade Now
+                </Button>
+              </div>
             </div>
           </div>
         )}
@@ -317,12 +409,12 @@ export function MainSidebar() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button 
-                    className="w-10 h-10 p-0 rounded-full bg-gradient-to-r from-[#9333EA] to-[#C026D3] hover:from-[#A855F7] hover:to-[#D946EF] text-white border-0"
+                    className="w-10 h-10 p-0 rounded-full bg-gradient-to-r from-sketchdojo-primary to-sketchdojo-accent hover:opacity-90 text-white border-0 shadow-md transition-all duration-300"
                   >
                     <CreditCard className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="right">Upgrade to Pro</TooltipContent>
+                <TooltipContent side="right" className="bg-gray-800 text-white border-gray-700">Upgrade to Pro</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
@@ -334,7 +426,10 @@ export function MainSidebar() {
             variant="outline"
             size="sm"
             onClick={toggleSidebar}
-            className="w-full flex items-center justify-center gap-2"
+            className={cn(
+              "w-full flex items-center justify-center gap-2 transition-colors duration-300 border-gray-200 dark:border-white/10 hover:border-sketchdojo-primary dark:hover:border-sketchdojo-primary hover:text-sketchdojo-primary dark:hover:text-sketchdojo-primary",
+              isCollapsed && "w-10 p-0"
+            )}
           >
             {isCollapsed ? (
               <ChevronRight className="h-4 w-4" />
@@ -355,7 +450,7 @@ export function MainSidebar() {
     <Button 
       variant="ghost" 
       size="icon" 
-      className="md:hidden fixed top-4 left-4 z-50 bg-[#0F1729]/80 backdrop-blur-sm text-white border border-white/10"
+      className="md:hidden fixed top-4 left-4 z-50 bg-sketchdojo-bg/80 backdrop-blur-sm text-white border border-white/10 hover:bg-sketchdojo-primary/20 hover:text-sketchdojo-primary transition-colors"
       onClick={() => setIsMobileMenuOpen(true)}
     >
       <Menu className="h-5 w-5" />
@@ -373,7 +468,7 @@ export function MainSidebar() {
       <Sheet open={isMobileMenuOpen && isMobile} onOpenChange={setIsMobileMenuOpen}>
         <SheetContent 
           side="left" 
-          className="p-0 w-[280px] border-r border-white/5 bg-[#0F1729]"
+          className="p-0 w-[280px] border-r border-white/10 bg-gradient-to-b from-sketchdojo-bg to-sketchdojo-bg-light"
         >
           {/* SheetTitle is required for accessibility, but we can hide it visually */}
           <div className="sr-only">
@@ -387,12 +482,44 @@ export function MainSidebar() {
       </Sheet>
       
       {/* Desktop Sidebar - Hidden on mobile */}
-      <div className={cn(
-        "hidden md:flex h-screen flex-col sticky top-0 border-r border-gray-200 dark:border-white/5 bg-white dark:bg-[#0F1729] transition-all duration-300",
-        isCollapsed ? "w-16" : "w-64"
-      )}>
+      <motion.div 
+        initial={{ width: isCollapsed ? 64 : 256 }}
+        animate={{ width: isCollapsed ? 64 : 256 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className={cn(
+          "hidden md:flex h-screen flex-col sticky top-0 border-r border-gray-200 dark:border-white/10 bg-white dark:bg-sketchdojo-bg shadow-sm dark:shadow-none z-30"
+        )}
+      >
+        <style jsx global>{`
+          /* Custom scrollbar for sidebar */
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+          }
+          
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.3);
+            border-radius: 4px;
+          }
+          
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.5);
+          }
+          
+          /* Dark mode adjustments */
+          .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+          }
+          
+          .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+          }
+        `}</style>
         <SidebarContent />
-      </div>
+      </motion.div>
     </>
   );
 }

@@ -9,8 +9,8 @@ import { MainSidebar } from '@/components/studio/main-sidebar';
 const StudioLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   
-  // Check if current path is an auth path (sign-in or sign-up)
-  const isAuthPath = pathname.includes('/sign-in') || pathname.includes('/sign-up');
+  // Check if current path is an auth path (sign-in, sign-up, or reset-password)
+  const isAuthPath = pathname.includes('/sign-in') || pathname.includes('/sign-up') || pathname.includes('/reset-password');
 
   return (
     <AuthProvider>

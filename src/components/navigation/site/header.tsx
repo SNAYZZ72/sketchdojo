@@ -51,15 +51,41 @@ export function Header() {
     };
   }, [isMenuOpen]);
 
-  // Smooth scroll function
+  // Improved smooth scroll function that works with your section structure
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
     setIsMenuOpen(false);
     
+    // Extract the section ID from the href
     const targetId = href.replace('#', '');
-    const targetElement = document.getElementById(targetId);
+    
+    // Try to find the element by ID first (ideal case)
+    let targetElement = document.getElementById(targetId);
+    
+    // If not found by ID, try to find a section that might match
+    if (!targetElement) {
+      // Look for sections with matching text content or class names
+      const allSections = document.querySelectorAll('section');
+      
+      allSections.forEach(section => {
+        // Check if section title/heading contains the target text
+        const headings = section.querySelectorAll('h2, h3, h4, .font-italianno');
+        
+        headings.forEach(heading => {
+          if (heading.textContent?.toLowerCase().includes(targetId.toLowerCase())) {
+            targetElement = section;
+          }
+        });
+        
+        // Also check for class names that might match
+        if (section.className.toLowerCase().includes(targetId.toLowerCase())) {
+          targetElement = section;
+        }
+      });
+    }
     
     if (targetElement) {
+      // Scroll to the element with offset for the header
       window.scrollTo({
         top: targetElement.offsetTop - 100,
         behavior: 'smooth'
@@ -68,6 +94,29 @@ export function Header() {
       // Update the URL without a page refresh
       window.history.pushState({}, '', href);
       setActiveSection(href);
+    } else {
+      console.log(`Section "${targetId}" not found, adding fallback navigation`);
+      
+      // As a last resort, try to scroll approximately where the section should be
+      // Based on common section ordering: features, community, pricing
+      const approximatePositions = {
+        'features': 0.3, // About 30% down the page
+        'community': 0.6, // About 60% down the page
+        'pricing': 0.8,   // About 80% down the page
+      };
+      
+      if (approximatePositions[targetId as keyof typeof approximatePositions]) {
+        const pageHeight = document.body.scrollHeight;
+        const targetPosition = pageHeight * approximatePositions[targetId as keyof typeof approximatePositions];
+        
+        window.scrollTo({
+          top: targetPosition,
+          behavior: 'smooth'
+        });
+        
+        window.history.pushState({}, '', href);
+        setActiveSection(href);
+      }
     }
   };
 

@@ -1,17 +1,9 @@
 export const siteNavigation = [
-  {
-    title: 'Features',
-    href: '#features',
-  },
-  {
-    title: 'Community',
-    href: '#community',
-  },
-  {
-    title: 'Pricing',
-    href: '#pricing',
-  },
-]
+  { title: "Features", href: "#features" },
+  { title: "Community", href: "#community" },
+  { title: "Pricing", href: "#pricing" },
+  // Add any other navigation items here
+];
 
 export const pricingPlans = [
   {
@@ -25,7 +17,7 @@ export const pricingPlans = [
       'Basic support',
     ],
     buttonText: 'Get Started',
-    buttonLink: '/signup',
+    buttonLink: '/studio/sign-up',
   },
   {
     title: 'Professional Plan',
@@ -39,7 +31,7 @@ export const pricingPlans = [
       'Basic support',
     ],
     buttonText: 'Get Started',
-    buttonLink: '/signup',
+    buttonLink: '/studio/sign-up',
   },
   {
     title: 'Studio Plan',
@@ -53,7 +45,7 @@ export const pricingPlans = [
       'Basic support',
     ],
     buttonText: 'Get Started',
-    buttonLink: '/signup',
+    buttonLink: '/studio/sign-up',
   },
 ]
 
@@ -206,7 +198,6 @@ export const sidebarNavigation: SidebarGroup[] = [
   {
     // Settings & Help
     items: [
-      { href: '/studio/settings', label: 'Settings', icon: 'Settings' },
       { href: '/studio/help', label: 'Help', icon: 'HelpCircle' },
     ],
   },

@@ -128,17 +128,17 @@ export default function Home() {
       {/* Page Sections */}
       <HeroSection />
       
-      <div className="animate-on-scroll">
+      <section id="features">
         <FeaturesSection features={features} />
-      </div>
+      </section>
       
-      <div className="animate-on-scroll">
+      <section id="community">
         <CommunitySection communityGallery={communityGallery} />
-      </div>
+      </section>
       
-      <div className="animate-on-scroll">
+      <section id="pricing">
         <PricingSection pricingPlans={pricingPlans} />
-      </div>
+      </section>
       
       <div className="animate-on-scroll">
         <FAQSection />
