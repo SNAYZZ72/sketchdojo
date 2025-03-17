@@ -134,3 +134,30 @@ export const projectCreationSteps = [
       progress?: number;
     };
   }
+
+  export interface ProjectMetadata {
+    genre: string;
+    template_type: string;
+    template_id: string | null;
+    target_audience?: string;
+    estimated_pages?: number;
+    publication_schedule?: string;
+    cover_image?: string;
+    progress?: number;
+  }
+  
+  export const targetAudienceOptions = [
+    { value: 'all_ages', label: 'All Ages' },
+    { value: 'children', label: 'Children (8-12)' },
+    { value: 'teens', label: 'Teens (13-17)' },
+    { value: 'young_adults', label: 'Young Adults (18-24)' },
+    { value: 'adults', label: 'Adults (25+)' },
+  ];
+  
+  export const publicationScheduleOptions = [
+    { value: 'weekly', label: 'Weekly' },
+    { value: 'biweekly', label: 'Bi-weekly' },
+    { value: 'monthly', label: 'Monthly' },
+    { value: 'quarterly', label: 'Quarterly' },
+    { value: 'oneshot', label: 'One-shot' },
+  ];
