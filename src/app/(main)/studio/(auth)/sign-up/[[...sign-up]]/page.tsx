@@ -30,6 +30,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 // Form schema
 const formSchema = z.object({
+  full_name: z.string().min(2, {
+    message: "Full name must be at least 2 characters.",
+  }).max(100),
   email: z.string().email({
     message: "Please enter a valid email address.",
   }),
@@ -89,6 +92,7 @@ export default function SignUpPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      full_name: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -111,6 +115,9 @@ export default function SignUpPage() {
         password: values.password,
         options: {
           emailRedirectTo: `${window.location.origin}/studio/sign-in`,
+          data: {
+            full_name: values.full_name,
+          }
         },
       });
 
@@ -208,7 +215,26 @@ export default function SignUpPage() {
             {!signUpComplete ? (
               <>
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">                    
+                    <FormField
+                      control={form.control}
+                      name="full_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white/80">Full Name</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="John Doe" 
+                              className="bg-white/10 border-white/20 text-white focus:border-sketchdojo-primary focus:ring-sketchdojo-primary/20"
+                              disabled={isLoading}
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage className="text-red-400" />
+                        </FormItem>
+                      )}
+                    />
+                    
                     <FormField
                       control={form.control}
                       name="email"
@@ -227,7 +253,7 @@ export default function SignUpPage() {
                         </FormItem>
                       )}
                     />
-                    
+                                       
                     <FormField
                       control={form.control}
                       name="password"
