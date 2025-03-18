@@ -1,7 +1,8 @@
+// src/app/(protected)/api/projects/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     
@@ -15,35 +16,12 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Get request body
-    const body = await request.json();
-    const { title, description, genre, templateType, templateId } = body;
-    
-    // Validate required fields
-    if (!title) {
-      return NextResponse.json(
-        { error: "Title is required" },
-        { status: 400 }
-      );
-    }
-    
-    // Create project in Supabase
+    // Get projects for the current user
     const { data, error } = await supabase
       .from('projects')
-      .insert({
-        user_id: user.id,
-        title,
-        description: description || null,
-        status: 'draft',
-        metadata: {
-          genre,
-          template_type: templateType,
-          template_id: templateId || null,
-          progress: 0
-        }
-      })
-      .select()
-      .single();
+      .select('*')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false });
     
     if (error) {
       return NextResponse.json(
@@ -57,9 +35,9 @@ export async function POST(request: NextRequest) {
       data
     });
   } catch (error: any) {
-    console.error("Error creating project:", error);
+    console.error("Error fetching projects:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to create project" },
+      { error: error.message || "Failed to fetch projects" },
       { status: 500 }
     );
   }

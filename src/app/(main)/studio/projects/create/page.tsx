@@ -9,6 +9,7 @@ import * as z from "zod";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 import ProtectedRoute from '@/components/global/protected-route';
+import { projectService } from '@/services/api';
 
 // Constants
 import { 
@@ -148,35 +149,14 @@ export default function CreateProjectPage() {
     try {
       setIsSubmitting(true);
       
-      // Get the user ID
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error("You must be logged in to create a project");
-        return;
-      }
-      
-      // Create project in Supabase
-      const { data, error } = await supabase
-        .from('projects')
-        .insert({
-          user_id: user.id,
-          title: projectData.title,
-          description: projectData.description || null,
-          status: 'draft',
-          metadata: {
-            genre: projectData.genre,
-            template_type: projectData.templateType,
-            template_id: projectData.templateId || null,
-            progress: 0
-          }
-        })
-        .select()
-        .single();
-      
-      if (error) {
-        throw error;
-      }
+      // Create project using the API service
+      const { data } = await projectService.createProject({
+        title: projectData.title,
+        description: projectData.description || null,
+        genre: projectData.genre,
+        templateType: projectData.templateType,
+        templateId: projectData.templateId || null
+      });
       
       // Show success message
       toast.success("Project created successfully!");
@@ -185,8 +165,8 @@ export default function CreateProjectPage() {
       router.push(`/studio/projects/${data.id}`);
       
     } catch (error: any) {
-      console.error("Error creating project:", error);
-      toast.error(error.message || "Failed to create project. Please try again.");
+      // Error handling is done in the service layer
+      console.error("Failed to create project:", error);
     } finally {
       setIsSubmitting(false);
     }

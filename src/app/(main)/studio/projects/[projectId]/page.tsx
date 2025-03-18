@@ -15,6 +15,7 @@ import ActivityTimeline from './components/ActivityTimeline';
 import ChapterOverview from './components/ChapterOverview';
 import ProjectStructure from './components/ProjectStructure';
 import QuickActions from './components/QuickActions';
+import { projectService } from '@/services/api';
 
 // Define Project interface
 interface Project {

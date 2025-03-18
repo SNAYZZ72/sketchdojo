@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 import ProtectedRoute from '@/components/global/protected-route';
+import { projectService } from '@/services/api';
 
 // Constants
 import { 
@@ -96,22 +97,7 @@ export default function ProjectsPage() {
     try {
       setIsLoading(true);
       
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error("You must be logged in to view projects");
-        return;
-      }
-      
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', user.id)
-        .order(sortBy, { ascending: false });
-      
-      if (error) {
-        throw error;
-      }
+      const { data } = await projectService.getProjects();
       
       // Process data
       const formattedProjects = data.map((project: any) => ({
@@ -122,9 +108,8 @@ export default function ProjectsPage() {
       setProjects(formattedProjects);
       setFilteredProjects(formattedProjects);
       
-    } catch (error: any) {
-      console.error("Error fetching projects:", error);
-      toast.error(error.message || "Failed to load projects");
+    } catch (error) {
+      // Error handling is done in the service layer
     } finally {
       setIsLoading(false);
     }
@@ -166,22 +151,14 @@ export default function ProjectsPage() {
     if (!projectToDelete) return;
     
     try {
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', projectToDelete);
-      
-      if (error) {
-        throw error;
-      }
+      await projectService.deleteProject(projectToDelete);
       
       // Update projects list
       setProjects(projects.filter(p => p.id !== projectToDelete));
       toast.success("Project deleted successfully");
       
-    } catch (error: any) {
-      console.error("Error deleting project:", error);
-      toast.error(error.message || "Failed to delete project");
+    } catch (error) {
+      // Error handling is done in the service layer
     } finally {
       setProjectToDelete(null);
       setDeleteDialogOpen(false);
