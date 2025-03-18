@@ -1,31 +1,37 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 import ProtectedRoute from '@/components/global/protected-route';
 
 // Constants
 import { 
-  projectStatusOptions, 
-  projectSortOptions,
-  Project 
+  projectCreationSteps, 
+  genreOptions, 
+  mockTemplates, 
+  templateTypeOptions 
 } from '@/components/constants/projects';
 
 // Icons
 import { 
-  Plus, 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  Trash2, 
-  Edit, 
-  Copy, 
-  Image as ImageIcon,
-  Layers,
-  Clock
+  ArrowLeft, 
+  ArrowRight, 
+  Image as ImageIcon, 
+  Bookmark, 
+  BookOpen, 
+  Check, 
+  Layers, 
+  X,
+  Plus,
+  Loader2,
+  PenTool,
+  FileText
 } from 'lucide-react';
 
 // UI Components
@@ -37,431 +43,631 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { 
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
-} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from '@/lib/utils';
 
-export default function ProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('updated_at');
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+// Form schemas for each step
+const projectDetailsSchema = z.object({
+  title: z.string().min(1, "Title is required").max(100, "Title must be 100 characters or less"),
+  description: z.string().max(500, "Description must be 500 characters or less").optional(),
+  genre: z.string().min(1, "Genre is required"),
+});
+
+const templateSelectionSchema = z.object({
+  templateType: z.enum(["blank", "basic", "detailed", "custom"]),
+  templateId: z.string().optional(),
+});
+
+export default function CreateProjectPage() {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [projectData, setProjectData] = useState({
+    title: '',
+    description: '',
+    genre: '',
+    templateType: 'blank',
+    templateId: '',
+  });
   
-  const router = useRouter();
   const supabase = createClient();
+  const router = useRouter();
   
-  // Fetch projects on mount
-  useEffect(() => {
-    fetchProjects();
-  }, []);
+  // Forms for each step
+  const detailsForm = useForm<z.infer<typeof projectDetailsSchema>>({
+    resolver: zodResolver(projectDetailsSchema),
+    defaultValues: {
+      title: projectData.title,
+      description: projectData.description,
+      genre: projectData.genre,
+    },
+  });
   
-  // Apply filters when search, status or sort changes
-  useEffect(() => {
-    filterProjects();
-  }, [searchQuery, statusFilter, sortBy, projects]);
+  const templateForm = useForm<z.infer<typeof templateSelectionSchema>>({
+    resolver: zodResolver(templateSelectionSchema),
+    defaultValues: {
+      templateType: projectData.templateType as any,
+      templateId: projectData.templateId,
+    },
+  });
   
-  // Fetch projects from Supabase
-  const fetchProjects = async () => {
+  // Filter templates based on type
+  const getFilteredTemplates = (type: string) => {
+    return mockTemplates.filter(template => template.type === type);
+  };
+  
+  // Handle form submissions for each step
+  const onDetailsSubmit = (data: z.infer<typeof projectDetailsSchema>) => {
+    setProjectData(prev => ({ ...prev, ...data }));
+    nextStep();
+  };
+  
+  const onTemplateSubmit = (data: z.infer<typeof templateSelectionSchema>) => {
+    setProjectData(prev => ({ ...prev, ...data }));
+    nextStep();
+  };
+  
+  // Navigation between steps
+  const nextStep = () => {
+    if (currentStep < projectCreationSteps.length - 1) {
+      setCurrentStep(currentStep + 1);
+      window.scrollTo(0, 0);
+    }
+  };
+  
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+      window.scrollTo(0, 0);
+    }
+  };
+  
+  // Project creation
+  const createProject = async () => {
     try {
-      setIsLoading(true);
+      setIsSubmitting(true);
       
+      // Get the user ID
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        toast.error("You must be logged in to view projects");
+        toast.error("You must be logged in to create a project");
         return;
       }
       
+      // Create project in Supabase
       const { data, error } = await supabase
         .from('projects')
-        .select('*')
-        .eq('user_id', user.id)
-        .order(sortBy, { ascending: false });
+        .insert({
+          user_id: user.id,
+          title: projectData.title,
+          description: projectData.description || null,
+          status: 'draft',
+          metadata: {
+            genre: projectData.genre,
+            template_type: projectData.templateType,
+            template_id: projectData.templateId || null,
+            progress: 0
+          }
+        })
+        .select()
+        .single();
       
       if (error) {
         throw error;
       }
       
-      // Process data
-      const formattedProjects = data.map((project: any) => ({
-        ...project,
-        metadata: project.metadata || {},
-      }));
+      // Show success message
+      toast.success("Project created successfully!");
       
-      setProjects(formattedProjects);
+      // Redirect to the new project
+      router.push(`/studio/projects/${data.id}`);
       
     } catch (error: any) {
-      console.error("Error fetching projects:", error);
-      toast.error(error.message || "Failed to load projects");
+      console.error("Error creating project:", error);
+      toast.error(error.message || "Failed to create project. Please try again.");
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
   
-  // Filter and sort projects
-  const filterProjects = () => {
-    let filtered = [...projects];
-    
-    // Search filter
-    if (searchQuery) {
-      filtered = filtered.filter(project => 
-        project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (project.description && project.description.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-    }
-    
-    // Status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(project => project.status === statusFilter);
-    }
-    
-    // Sort
-    filtered.sort((a, b) => {
-      if (sortBy === 'title') {
-        return a.title.localeCompare(b.title);
-      } else if (sortBy === 'created_at') {
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      } else {
-        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-      }
-    });
-    
-    setFilteredProjects(filtered);
-  };
-  
-  // Delete project
-  const deleteProject = async () => {
-    if (!projectToDelete) return;
-    
-    try {
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', projectToDelete);
-      
-      if (error) {
-        throw error;
-      }
-      
-      // Update projects list
-      setProjects(projects.filter(p => p.id !== projectToDelete));
-      toast.success("Project deleted successfully");
-      
-    } catch (error: any) {
-      console.error("Error deleting project:", error);
-      toast.error(error.message || "Failed to delete project");
-    } finally {
-      setProjectToDelete(null);
-      setDeleteDialogOpen(false);
-    }
-  };
-  
-  // Format date
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }).format(date);
-  };
-  
-  // Get relative time
-  const getRelativeTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
-    if (diffSeconds < 60) {
-      return 'just now';
-    } else if (diffSeconds < 3600) {
-      const minutes = Math.floor(diffSeconds / 60);
-      return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    } else if (diffSeconds < 86400) {
-      const hours = Math.floor(diffSeconds / 3600);
-      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    } else if (diffSeconds < 2592000) {
-      const days = Math.floor(diffSeconds / 86400);
-      return `${days} day${days > 1 ? 's' : ''} ago`;
-    } else {
-      return formatDate(dateString);
-    }
-  };
-  
-  // Get status badge
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Draft</Badge>;
-      case 'in_progress':
-        return <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">In Progress</Badge>;
-      case 'completed':
-        return <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">Completed</Badge>;
-      case 'archived':
-        return <Badge variant="outline" className="bg-gray-500/10 text-gray-500 border-gray-500/20">Archived</Badge>;
+  // Get icon component by name
+  const getIconComponent = (iconName: string) => {
+    switch (iconName) {
+      case 'Plus':
+        return <Plus className="h-5 w-5" />;
+      case 'Layers':
+        return <Layers className="h-5 w-5" />;
+      case 'BookOpen':
+        return <BookOpen className="h-5 w-5" />;
+      case 'Bookmark':
+        return <Bookmark className="h-5 w-5" />;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Plus className="h-5 w-5" />;
     }
   };
   
-  // Loading skeletons
-  const renderSkeletons = () => {
-    return Array(3).fill(0).map((_, i) => (
-      <Card key={i} className="overflow-hidden">
-        <div className="relative h-40 w-full bg-muted">
-          <Skeleton className="h-full w-full" />
-        </div>
-        <CardHeader className="pb-2">
-          <Skeleton className="h-6 w-3/4 mb-2" />
-          <Skeleton className="h-4 w-1/2" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-4 w-full mb-2" />
-          <Skeleton className="h-2 w-full mb-4" />
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Skeleton className="h-9 w-20" />
-          <Skeleton className="h-9 w-20" />
-        </CardFooter>
-      </Card>
-    ));
+  // Get template icon by type
+  const getTemplateIcon = (type: string) => {
+    switch (type) {
+      case 'action':
+        return <PenTool className="h-4 w-4 text-red-500" />;
+      case 'romance':
+        return <FileText className="h-4 w-4 text-pink-500" />;
+      case 'horror':
+        return <FileText className="h-4 w-4 text-purple-500" />;
+      default:
+        return <FileText className="h-4 w-4 text-blue-500" />;
+    }
+  };
+  
+  // Render the current step
+  const renderStep = () => {
+    switch (projectCreationSteps[currentStep].id) {
+      case 'details':
+        return (
+          <Form {...detailsForm}>
+            <form onSubmit={detailsForm.handleSubmit(onDetailsSubmit)} className="space-y-6">
+              <div className="space-y-4">
+                <FormField
+                  control={detailsForm.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project Title <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="My Awesome Manga" 
+                          {...field} 
+                          className="bg-white dark:bg-white/5 border-gray-300 dark:border-white/20"
+                        />
+                      </FormControl>
+                      <FormDescription>Give your manga project a memorable name.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={detailsForm.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="A brief description of your manga project..." 
+                          className="resize-none h-32 bg-white dark:bg-white/5 border-gray-300 dark:border-white/20"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>Describe what your manga is about (optional).</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={detailsForm.control}
+                  name="genre"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Genre <span className="text-destructive">*</span></FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="bg-white dark:bg-white/5 border-gray-300 dark:border-white/20">
+                            <SelectValue placeholder="Select a genre" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-white dark:bg-background/90 border-gray-200 dark:border-white/20">
+                          {genreOptions.map((genre) => (
+                            <SelectItem 
+                              key={genre.value} 
+                              value={genre.value}
+                              className="text-gray-800 dark:text-white/80 focus:text-gray-900 focus:bg-gray-100 dark:focus:text-white dark:focus:bg-white/10"
+                            >
+                              {genre.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>Choose the genre that best fits your manga.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="flex justify-end pt-2">
+                <Button 
+                  type="submit"
+                  className="bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 transform hover:-translate-y-0.5 border-0 text-white"
+                >
+                  Next Step <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </form>
+          </Form>
+        );
+        
+      case 'template':
+        return (
+          <Form {...templateForm}>
+            <form onSubmit={templateForm.handleSubmit(onTemplateSubmit)} className="space-y-8">
+              <FormField
+                control={templateForm.control}
+                name="templateType"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Template Type <span className="text-destructive">*</span></FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+                      >
+                        {templateTypeOptions.map((template) => (
+                          <div key={template.value} className="col-span-1">
+                            <RadioGroupItem value={template.value} id={template.value} className="peer sr-only" />
+                            <label
+                              htmlFor={template.value}
+                              className="flex flex-col items-center justify-between border-2 border-gray-200 dark:border-white/10 rounded-lg p-4 cursor-pointer hover:border-primary peer-checked:border-primary peer-checked:bg-primary/5 transition-all"
+                            >
+                              <div className="rounded-full bg-gray-100 dark:bg-white/5 p-3 mb-3">
+                                {getIconComponent(template.icon)}
+                              </div>
+                              <div className="font-medium text-center">{template.label}</div>
+                              <div className="text-xs text-gray-600 dark:text-white/60 text-center mt-2">
+                                {template.description}
+                              </div>
+                            </label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              {/* Show specific templates based on selection */}
+              {templateForm.watch("templateType") !== "blank" && (
+                <FormField
+                  control={templateForm.control}
+                  name="templateId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Select Template</FormLabel>
+                      <FormControl>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {templateForm.watch("templateType") === "custom" ? (
+                            <div className="col-span-full text-center py-10 border-2 border-dashed rounded-lg p-8 border-gray-200 dark:border-white/10">
+                              <Bookmark className="h-10 w-10 text-gray-400 dark:text-white/20 mx-auto mb-4" />
+                              <p className="text-gray-600 dark:text-white/60 mb-4">You haven't saved any custom templates yet.</p>
+                              <Button 
+                                variant="outline"
+                                className="border-gray-300 dark:border-white/20 text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10"
+                              >
+                                Create a Custom Template
+                              </Button>
+                            </div>
+                          ) : (
+                            getFilteredTemplates(templateForm.watch("templateType")).map((template) => (
+                              <div 
+                                key={template.id}
+                                className={cn(
+                                  "relative border rounded-lg overflow-hidden group cursor-pointer transition-all",
+                                  field.value === template.id 
+                                    ? "border-primary ring-2 ring-primary/20" 
+                                    : "border-gray-200 dark:border-white/10 hover:border-primary/50"
+                                )}
+                                onClick={() => field.onChange(template.id)}
+                              >
+                                <div className="aspect-[4/3] bg-gray-100 dark:bg-white/5 relative">
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <ImageIcon className="h-10 w-10 text-gray-400 dark:text-white/20" />
+                                  </div>
+                                  
+                                  {/* Template type badge */}
+                                  <div className="absolute top-2 left-2">
+                                    <Badge variant="outline" className="bg-white/80 dark:bg-black/50 backdrop-blur-sm">
+                                      {getTemplateIcon(template.type)}
+                                      <span className="ml-1">{template.type}</span>
+                                    </Badge>
+                                  </div>
+                                  
+                                  {/* Selection indicator */}
+                                  {field.value === template.id && (
+                                    <div className="absolute top-2 right-2 bg-primary text-white p-1 rounded-full">
+                                      <Check className="h-4 w-4" />
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                <div className="p-4">
+                                  <h3 className="font-medium text-gray-900 dark:text-white">{template.name}</h3>
+                                  <p className="text-sm text-gray-600 dark:text-white/60 mt-1">{template.description}</p>
+                                  
+                                  <div className="flex items-center justify-between mt-3">
+                                    <div className="flex flex-wrap gap-1">
+                                      {template.tags.slice(0, 2).map((tag) => (
+                                        <span 
+                                          key={tag} 
+                                          className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/60 rounded-full"
+                                        >
+                                          {tag}
+                                        </span>
+                                      ))}
+                                      {template.tags.length > 2 && (
+                                        <span className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/60 rounded-full">
+                                          +{template.tags.length - 2}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="text-xs text-gray-600 dark:text-white/60 font-medium">
+                                      {template.pages} pages
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </FormControl>
+                      {templateForm.watch("templateType") !== "blank" && 
+                       templateForm.watch("templateType") !== "custom" && (
+                        <FormDescription>
+                          Choose a template for your project. You can customize it later.
+                        </FormDescription>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              
+              <div className="flex justify-between pt-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={prevStep}
+                  className="border-gray-300 dark:border-white/20 text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" /> Back
+                </Button>
+                <Button 
+                  type="submit"
+                  className="bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 transform hover:-translate-y-0.5 border-0 text-white"
+                >
+                  Next Step <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </form>
+          </Form>
+        );
+        
+      case 'preview':
+        return (
+          <div className="space-y-8">
+            <div className="border border-gray-200 dark:border-white/10 rounded-lg overflow-hidden">
+              <div className="p-6 bg-card">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{projectData.title}</h3>
+                {projectData.description && (
+                  <p className="text-gray-600 dark:text-white/60 mt-2">{projectData.description}</p>
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mt-6">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-white/60">Genre</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {genreOptions.find(g => g.value === projectData.genre)?.label || projectData.genre}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-white/60">Template Type</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {templateTypeOptions.find(t => t.value === projectData.templateType)?.label || projectData.templateType}
+                    </p>
+                  </div>
+                  
+                  {projectData.templateId && (
+                    <div className="col-span-1 md:col-span-2">
+                      <p className="text-sm text-gray-600 dark:text-white/60">Selected Template</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {mockTemplates.find(t => t.id === projectData.templateId)?.name || "Custom Template"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <Separator className="border-gray-200 dark:border-white/10" />
+              
+              <div className="p-6 bg-gray-50 dark:bg-white/[0.02]">
+                <h4 className="font-medium text-gray-900 dark:text-white mb-4">What happens next?</h4>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-3">
+                    <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="h-3 w-3 text-primary" />
+                    </div>
+                    <span className="text-gray-700 dark:text-white/80">Your project will be created with the settings you specified</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="h-3 w-3 text-primary" />
+                    </div>
+                    <span className="text-gray-700 dark:text-white/80">You'll be taken to the project dashboard where you can start creating pages</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="h-3 w-3 text-primary" />
+                    </div>
+                    <span className="text-gray-700 dark:text-white/80">If you selected a template, it will be pre-loaded with starter content</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="flex justify-between pt-2">
+              <Button 
+                variant="outline" 
+                onClick={prevStep}
+                className="border-gray-300 dark:border-white/20 text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Button>
+              <Button 
+                onClick={createProject} 
+                disabled={isSubmitting}
+                className="bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 transform hover:-translate-y-0.5 border-0 text-white"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create Project"
+                )}
+              </Button>
+            </div>
+          </div>
+        );
+    }
   };
 
   return (
     <ProtectedRoute>
-      <div className="container max-w-7xl mx-auto px-4 py-8 md:py-12">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold">My Projects</h1>
-            <p className="text-muted-foreground mt-1">Manage your manga projects</p>
-          </div>
-          
-          <Button onClick={() => router.push('/studio/projects/create')} className="md:w-auto w-full">
-            <Plus className="mr-2 h-4 w-4" /> Create New Project
+      <motion.div 
+        className="container max-w-4xl mx-auto px-4 py-8 md:py-12"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="mb-8">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push('/studio/projects')}
+            className="mb-4 text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Projects
           </Button>
-        </div>
-        
-        {/* Filters and search */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Search projects..."
-              className="pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
           
-          <div className="flex gap-2">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <Filter className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                {projectStatusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Create New Project</h1>
+          <p className="text-gray-600 dark:text-white/60 mt-1">Set up your manga project in a few simple steps</p>
+        </div>
+        
+        {/* Step indicator */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between relative">
+            {/* Progress line */}
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-gray-200 dark:bg-white/10 w-full"></div>
+            <div 
+              className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-primary to-secondary transition-all"
+              style={{ width: `${(currentStep / (projectCreationSteps.length - 1)) * 100}%` }}
+            ></div>
             
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                {projectSortOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Step circles */}
+            {projectCreationSteps.map((step, index) => (
+              <div 
+                key={step.id} 
+                className={cn(
+                  "relative flex flex-col items-center gap-2",
+                  index < currentStep 
+                    ? "text-primary" 
+                    : index === currentStep 
+                      ? "text-primary" 
+                      : "text-gray-400 dark:text-white/40"
+                )}
+              >
+                <div 
+                  className={cn(
+                    "relative z-10 flex items-center justify-center w-8 h-8 rounded-full transition-all duration-300",
+                    index < currentStep 
+                      ? "bg-gradient-to-r from-primary to-secondary text-white" 
+                      : index === currentStep 
+                        ? "bg-white dark:bg-gray-900 border-2 border-primary" 
+                        : "bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-white/20"
+                  )}
+                >
+                  {index < currentStep ? (
+                    <Check className="h-4 w-4" />
+                  ) : (
+                    <span className="text-sm">{index + 1}</span>
+                  )}
+                </div>
+                <span className="text-xs font-medium hidden md:block">{step.title}</span>
+              </div>
+            ))}
           </div>
         </div>
         
-        {/* Projects grid */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {renderSkeletons()}
-          </div>
-        ) : filteredProjects.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProjects.map((project) => (
-              <Card key={project.id} className="overflow-hidden group hover:shadow-md transition-all">
-                <div className="relative h-40 w-full bg-muted">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <ImageIcon className="h-12 w-12 text-muted-foreground/30" />
-                  </div>
-                  
-                  {/* Project cover image would go here */}
-                  {/* {project.metadata.cover_image && (
-                    <Image src={project.metadata.cover_image} alt={project.title} fill className="object-cover" />
-                  )} */}
-                  
-                  {/* Status badge */}
-                  <div className="absolute top-3 left-3">
-                    {getStatusBadge(project.status)}
-                  </div>
-                  
-                  {/* Project actions */}
-                  <div className="absolute top-3 right-3">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 bg-black/20 backdrop-blur-sm text-white hover:bg-black/40">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Project Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => router.push(`/studio/projects/${project.id}`)}>
-                          <Edit className="mr-2 h-4 w-4" /> Edit Project
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Copy className="mr-2 h-4 w-4" /> Duplicate
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => {
-                            setProjectToDelete(project.id);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-                
-                <div className="p-5">
-                  <Link href={`/studio/projects/${project.id}`} className="hover:underline block">
-                    <h3 className="font-bold text-lg group-hover:text-primary transition-colors truncate">
-                      {project.title}
-                    </h3>
-                  </Link>
-                  
-                  {project.description && (
-                    <p className="text-muted-foreground text-sm mt-1 line-clamp-2">
-                      {project.description}
-                    </p>
-                  )}
-                  
-                  {project.metadata.progress && (
-                    <div className="mt-4 space-y-1">
-                      <div className="flex justify-between items-center text-xs">
-                        <span>Progress</span>
-                        <span className="text-primary">{project.metadata.progress}%</span>
-                      </div>
-                      <Progress value={project.metadata.progress} className="h-1" />
-                    </div>
-                  )}
-                  
-                  <div className="mt-4 pt-4 border-t flex justify-between items-center text-xs text-muted-foreground">
-                    <div className="flex items-center">
-                      <Layers className="h-3 w-3 mr-1" />
-                      <span className="capitalize">
-                        {project.metadata.genre || "No genre"}
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="h-3 w-3 mr-1" />
-                      <span>{getRelativeTime(project.updated_at)}</span>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ))}
-            
-            {/* Create new project card */}
-            <Card className="overflow-hidden border-dashed border-2 group hover:border-primary/50 transition-all">
-              <CardContent className="h-full flex flex-col items-center justify-center p-6">
-                <div className="rounded-full bg-muted w-16 h-16 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                  <Plus className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
-                </div>
-                <h3 className="text-xl font-medium mb-2 text-center">Create New Project</h3>
-                <p className="text-sm text-muted-foreground text-center max-w-sm mb-6">
-                  Start from scratch or use a template
-                </p>
-                <Button onClick={() => router.push('/studio/projects/create')}>New Project</Button>
-              </CardContent>
-            </Card>
-          </div>
-        ) : (
-          <Card className="border-dashed border-2 border-muted">
-            <CardContent className="py-12 flex flex-col items-center justify-center">
-              <div className="rounded-full bg-muted w-16 h-16 flex items-center justify-center mb-4">
-                <Layers className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-xl font-medium mb-2">No projects yet</h3>
-              <p className="text-muted-foreground text-center max-w-sm mb-6">
-                {searchQuery || statusFilter !== 'all' 
-                  ? "No projects match your current filters. Try adjusting your search or filters."
-                  : "Start creating your first manga project and it will appear here."}
-              </p>
-              <Button onClick={() => router.push('/studio/projects/create')}>Create Your First Project</Button>
-            </CardContent>
-          </Card>
-        )}
+        {/* Current step content */}
+        <Card className="border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-md">
+          <CardHeader className="border-b border-gray-200 dark:border-white/10 pb-4">
+            <CardTitle className="text-xl text-gray-900 dark:text-white">
+              {projectCreationSteps[currentStep].title}
+            </CardTitle>
+            <CardDescription className="text-gray-600 dark:text-white/60">
+              {projectCreationSteps[currentStep].id === 'details' && "Enter basic information about your manga project"}
+              {projectCreationSteps[currentStep].id === 'template' && "Choose a template or start from scratch"}
+              {projectCreationSteps[currentStep].id === 'preview' && "Review your project details before creation"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
+            {renderStep()}
+          </CardContent>
+        </Card>
         
-        {/* Delete confirmation dialog */}
-        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the
-                project and all its associated data.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={deleteProject}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+        {/* Tips for each step */}
+        <motion.div 
+          className="mt-8 p-4 border border-primary/20 bg-primary/5 rounded-lg"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.5 }}
+        >
+          <div className="flex items-start gap-3">
+            <div className="text-primary mt-0.5">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 18.3337C14.6024 18.3337 18.3334 14.6027 18.3334 10.0003C18.3334 5.39795 14.6024 1.66699 10 1.66699C5.39765 1.66699 1.66669 5.39795 1.66669 10.0003C1.66669 14.6027 5.39765 18.3337 10 18.3337Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M10 6.66699V10.0003" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M10 13.333H10.0083" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-primary mb-1">Tips for this step</h4>
+              <p className="text-sm text-gray-700 dark:text-white/80">
+                {projectCreationSteps[currentStep].id === 'details' && "Choose a unique title and clear description to help identify your project. The genre helps organize your work and will be used for recommendations."}
+                {projectCreationSteps[currentStep].id === 'template' && "Templates give you a head start with pre-defined layouts and structure. Starting blank gives you complete freedom but requires more setup."}
+                {projectCreationSteps[currentStep].id === 'preview' && "Double-check your project details before creating. You can still edit these settings later, but getting it right from the start saves time."}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
     </ProtectedRoute>
   );
 }

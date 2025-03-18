@@ -6,7 +6,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react"; // Add this import for Loader2
+import { Loader2 } from "lucide-react";
+
+// Project-related components
+import ProjectStats from './components/ProjectStats';
+import RecentPages from './components/RecentPages';
+import ActivityTimeline from './components/ActivityTimeline';
+import ChapterOverview from './components/ChapterOverview';
+import ProjectStructure from './components/ProjectStructure';
+import QuickActions from './components/QuickActions';
 
 // Define Project interface
 interface Project {
@@ -23,27 +31,11 @@ interface Project {
     template_id: string | null;
     cover_image?: string;
     progress?: number;
+    target_audience?: string;
+    estimated_pages?: number;
+    tags?: string[];
   };
 }
-
-// Import your components - you need to create these files
-// or comment them out if you haven't created them yet
-import ProjectStats from './components/ProjectStats';
-// Comment out or create these component files
-/*
-import RecentPages from './components/RecentPages';
-import ActivityTimeline from './components/ActivityTimeline';
-import ChapterOverview from './components/ChapterOverview';
-import ProjectStructure from './components/ProjectStructure';
-import QuickActions from './components/QuickActions';
-*/
-
-// Placeholder components until you create the actual ones
-const RecentPages = ({ projectId }: { projectId: string }) => <div>Recent Pages</div>;
-const ActivityTimeline = ({ projectId }: { projectId: string }) => <div>Activity Timeline</div>;
-const ChapterOverview = ({ projectId }: { projectId: string }) => <div>Chapter Overview</div>;
-const ProjectStructure = ({ project }: { project: Project }) => <div>Project Structure</div>;
-const QuickActions = ({ project }: { project: Project }) => <div>Quick Actions</div>;
 
 export default function ProjectDashboard() {
   const params = useParams();
@@ -52,13 +44,16 @@ export default function ProjectDashboard() {
   
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   // Fetch project data on mount
   useEffect(() => {
     const fetchProject = async () => {
       try {
         setIsLoading(true);
+        setError(null);
         
+        // Check if user is authenticated
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
@@ -67,6 +62,7 @@ export default function ProjectDashboard() {
           return;
         }
         
+        // Fetch project data
         const { data, error } = await supabase
           .from('projects')
           .select('*')
@@ -79,15 +75,16 @@ export default function ProjectDashboard() {
         }
         
         if (!data) {
+          setError("Project not found");
           toast.error("Project not found");
-          router.push('/studio/projects');
           return;
         }
         
         setProject(data as Project);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching project:", error);
-        toast.error("Failed to load project");
+        setError(error.message || "Failed to load project");
+        toast.error(error.message || "Failed to load project");
       } finally {
         setIsLoading(false);
       }
@@ -99,9 +96,28 @@ export default function ProjectDashboard() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="container max-w-7xl mx-auto px-4 py-8">
-        <div className="h-screen flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading project details...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Error state
+  if (error) {
+    return (
+      <div className="container max-w-7xl mx-auto px-4 py-12 text-center">
+        <div className="bg-destructive/10 p-6 rounded-lg border border-destructive/20 max-w-lg mx-auto">
+          <h2 className="text-xl font-semibold mb-2">Error loading project</h2>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <button 
+            onClick={() => router.push('/studio/projects')}
+            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+          >
+            Return to Projects
+          </button>
         </div>
       </div>
     );
@@ -109,16 +125,31 @@ export default function ProjectDashboard() {
   
   // Project not found
   if (!project) {
-    return null; // Router will handle redirect
+    return (
+      <div className="container max-w-7xl mx-auto px-4 py-12 text-center">
+        <div className="bg-muted p-6 rounded-lg border border-border max-w-lg mx-auto">
+          <h2 className="text-xl font-semibold mb-2">Project not found</h2>
+          <p className="text-muted-foreground mb-4">The project you're looking for doesn't exist or you don't have access to it.</p>
+          <button 
+            onClick={() => router.push('/studio/projects')}
+            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+          >
+            Browse Projects
+          </button>
+        </div>
+      </div>
+    );
   }
   
   return (
     <div className="container max-w-7xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold">{project.title}</h1>
-            <p className="text-muted-foreground mt-1">{project.description}</p>
+            {project.description && (
+              <p className="text-muted-foreground mt-1">{project.description}</p>
+            )}
           </div>
           
           <QuickActions project={project} />
