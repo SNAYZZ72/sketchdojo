@@ -1,12 +1,10 @@
 // src/services/api.ts
 import { toast } from "sonner";
 
-const API_BASE_URL = '/api';
-
-// Common fetch wrapper with error handling
+// Base API fetch function with error handling
 async function fetchAPI(endpoint: string, options: RequestInit = {}) {
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetch(`/api${endpoint}`, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
@@ -15,115 +13,155 @@ async function fetchAPI(endpoint: string, options: RequestInit = {}) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.error || `Request failed with status ${response.status}`);
+      const errorMessage = `Request failed with status ${response.status}`;
+      console.error(`API Error (${endpoint}):`, new Error(errorMessage));
+      throw new Error(errorMessage);
     }
 
     return await response.json();
-  } catch (error: any) {
+  } catch (error) {
     console.error(`API Error (${endpoint}):`, error);
-    toast.error(error.message || "An unexpected error occurred");
     throw error;
   }
 }
 
-// Project APIs
+// Project service
 export const projectService = {
-  // Create a new project
-  createProject: async (projectData: any) => {
-    return fetchAPI('/projects', {
-      method: 'POST',
-      body: JSON.stringify(projectData),
-    });
-  },
-
   // Get all projects for the current user
-  getProjects: async () => {
-    return fetchAPI('/projects');
+  async getProjects() {
+    try {
+      return await fetchAPI('/projects');
+    } catch (error) {
+      toast.error("Failed to load projects");
+      throw error;
+    }
   },
 
-  // Get a single project by ID
-  getProject: async (projectId: string) => {
-    return fetchAPI(`/projects/${projectId}`);
+  // Get project by ID
+  async getProject(id: string) {
+    try {
+      return await fetchAPI(`/projects/${id}`);
+    } catch (error) {
+      toast.error("Failed to load project");
+      throw error;
+    }
+  },
+
+  // Create a new project
+  async createProject(projectData: any) {
+    try {
+      return await fetchAPI('/projects', {
+        method: 'POST',
+        body: JSON.stringify(projectData)
+      });
+    } catch (error) {
+      toast.error("Failed to create project");
+      throw error;
+    }
   },
 
   // Update a project
-  updateProject: async (projectId: string, projectData: any) => {
-    return fetchAPI(`/projects/${projectId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(projectData),
-    });
+  async updateProject(id: string, projectData: any) {
+    try {
+      return await fetchAPI(`/projects/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(projectData)
+      });
+    } catch (error) {
+      toast.error("Failed to update project");
+      throw error;
+    }
   },
 
   // Delete a project
-  deleteProject: async (projectId: string) => {
-    return fetchAPI(`/projects/${projectId}`, {
-      method: 'DELETE',
-    });
-  },
+  async deleteProject(id: string) {
+    try {
+      return await fetchAPI(`/projects/${id}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      toast.error("Failed to delete project");
+      throw error;
+    }
+  }
 };
 
-// Chapter APIs
-export const chapterService = {
-  // Create a new chapter
-  createChapter: async (chapterData: any) => {
-    return fetchAPI('/chapters', {
-      method: 'POST',
-      body: JSON.stringify(chapterData),
-    });
-  },
-
-  // Get chapters for a project
-  getChapters: async (projectId: string) => {
-    return fetchAPI(`/chapters?project_id=${projectId}`);
-  },
-
-  // Update a chapter
-  updateChapter: async (chapterId: string, chapterData: any) => {
-    return fetchAPI(`/chapters/${chapterId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(chapterData),
-    });
-  },
-
-  // Delete a chapter
-  deleteChapter: async (chapterId: string) => {
-    return fetchAPI(`/chapters/${chapterId}`, {
-      method: 'DELETE',
-    });
-  },
-};
-
-// Character APIs
+// Character service
 export const characterService = {
-  // Create a new character
-  createCharacter: async (characterData: any) => {
-    return fetchAPI('/characters', {
-      method: 'POST',
-      body: JSON.stringify(characterData),
-    });
+  // Get all characters for the current user
+  async getCharacters(projectId?: string) {
+    try {
+      const endpoint = projectId ? `/characters?project_id=${projectId}` : '/characters';
+      return await fetchAPI(endpoint);
+    } catch (error) {
+      toast.error("Failed to load characters");
+      throw error;
+    }
   },
 
-  // Get characters (optionally filtered by project)
-  getCharacters: async (projectId?: string) => {
-    const endpoint = projectId ? `/characters?project_id=${projectId}` : '/characters';
-    return fetchAPI(endpoint);
-  },
+  // Create a new character
+  async createCharacter(characterData: any) {
+    try {
+      return await fetchAPI('/characters', {
+        method: 'POST',
+        body: JSON.stringify(characterData)
+      });
+    } catch (error) {
+      toast.error("Failed to create character");
+      throw error;
+    }
+  }
 };
 
-// Background APIs
+// Background service
 export const backgroundService = {
-  // Create a new background
-  createBackground: async (backgroundData: any) => {
-    return fetchAPI('/backgrounds', {
-      method: 'POST',
-      body: JSON.stringify(backgroundData),
-    });
+  // Get all backgrounds for the current user
+  async getBackgrounds(projectId?: string) {
+    try {
+      const endpoint = projectId ? `/backgrounds?project_id=${projectId}` : '/backgrounds';
+      return await fetchAPI(endpoint);
+    } catch (error) {
+      toast.error("Failed to load backgrounds");
+      throw error;
+    }
   },
 
-  // Get backgrounds (optionally filtered by project)
-  getBackgrounds: async (projectId?: string) => {
-    const endpoint = projectId ? `/backgrounds?project_id=${projectId}` : '/backgrounds';
-    return fetchAPI(endpoint);
+  // Create a new background
+  async createBackground(backgroundData: any) {
+    try {
+      return await fetchAPI('/backgrounds', {
+        method: 'POST',
+        body: JSON.stringify(backgroundData)
+      });
+    } catch (error) {
+      toast.error("Failed to create background");
+      throw error;
+    }
+  }
+};
+
+// Chapter service
+export const chapterService = {
+  // Get all chapters for a project
+  async getChapters(projectId: string) {
+    try {
+      return await fetchAPI(`/chapters?project_id=${projectId}`);
+    } catch (error) {
+      toast.error("Failed to load chapters");
+      throw error;
+    }
   },
+
+  // Create a new chapter
+  async createChapter(chapterData: any) {
+    try {
+      return await fetchAPI('/chapters', {
+        method: 'POST',
+        body: JSON.stringify(chapterData)
+      });
+    } catch (error) {
+      toast.error("Failed to create chapter");
+      throw error;
+    }
+  }
 };
