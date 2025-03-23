@@ -186,7 +186,7 @@ export const sidebarNavigation: SidebarGroup[] = [
       { href: '/studio/tools/voice-acting', label: 'Voice Acting', icon: 'Microphone' },
       { href: '/studio/tools/storyboard', label: 'Storyboard', icon: 'Columns' },
       { href: '/studio/tools/cover-design', label: 'Cover Design', icon: 'BookCopy' },
-      { href: '/studio/tools/Chapters', label: 'Chapters', icon: 'BookOpen' },
+      { href: '/studio/tools/chapters', label: 'chapters', icon: 'BookOpen' },
     ],
   },
   {
