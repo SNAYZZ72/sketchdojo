@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useAuth } from '@/providers/auth-provider';
 import { ThemeToggle } from '@/components/global/theme-toggle';
 import { sidebarNavigation } from '@/components/constants/navigation';
+import { toast } from 'sonner';
 
 // Icons
 import { 
@@ -37,7 +38,9 @@ import {
   UserSquare,
   Bot,
   Columns,
-  BookCopy
+  BookCopy,
+  Globe,
+  Check
 } from 'lucide-react';
 
 // UI Components
@@ -66,12 +69,19 @@ export function MainSidebar() {
   const [isMobile, setIsMobile] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeGroup, setActiveGroup] = useState<number | null>(null);
+  const [currentLanguage, setCurrentLanguage] = useState("en");
   
   // Load sidebar state from local storage on mount
   useEffect(() => {
     const savedState = localStorage.getItem(SIDEBAR_STATE_KEY);
     if (savedState !== null) {
       setIsCollapsed(savedState === 'true');
+    }
+    
+    // Load saved language from localStorage if exists
+    const savedLanguage = localStorage.getItem('sketchdojo-language');
+    if (savedLanguage) {
+      setCurrentLanguage(savedLanguage);
     }
   }, []);
   
@@ -150,6 +160,41 @@ export function MainSidebar() {
     }, 150);
   };
 
+  // Handle language change
+  const handleLanguageChange = (language: string) => {
+    setCurrentLanguage(language);
+    localStorage.setItem('sketchdojo-language', language);
+    
+    // In a real app, you'd want to trigger the language change in your i18n system
+    // For example: i18n.changeLanguage(language);
+    
+    toast.success(`Language changed to ${getLanguageName(language)}`);
+  };
+  
+  // Get language name from code
+  const getLanguageName = (code: string): string => {
+    const languages: Record<string, string> = {
+      en: "English",
+      fr: "French",
+      es: "Spanish",
+      de: "German",
+      ja: "Japanese",
+    };
+    return languages[code] || "English";
+  };
+  
+  // Get language emoji flag from code
+  const getLanguageFlag = (code: string): string => {
+    const flags: Record<string, string> = {
+      en: "🇺🇸",
+      fr: "🇫🇷",
+      es: "🇪🇸",
+      de: "🇩🇪",
+      ja: "🇯🇵",
+    };
+    return flags[code] || "🇺🇸";
+  };
+
   // Helper function to get the icon component based on icon name
   const getIconComponent = (iconName: string, isMobileView = false) => {
     const size = isMobileView ? "h-6 w-6" : "h-5 w-5";
@@ -178,6 +223,7 @@ export function MainSidebar() {
       case 'Microphone': return <Microphone className={size} />;
       case 'Columns': return <Columns className={size} />;
       case 'BookCopy': return <BookCopy className={size} />;
+      case 'Globe': return <Globe className={size} />;
       default: return <div className={size} />;
     }
   };
@@ -384,9 +430,43 @@ export function MainSidebar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <Link href="/studio/billing" className="cursor-pointer">
+                      <CreditCard className="mr-2 h-4 w-4" /> Billing & Subscription
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link href="/studio/settings" className="cursor-pointer">
                       <Settings className="mr-2 h-4 w-4" /> Settings
                     </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="flex items-center">
+                    <Globe className="mr-2 h-4 w-4" /> Language
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem className="flex items-center cursor-pointer" onClick={() => handleLanguageChange('en')}>
+                    <div className="w-4 h-4 mr-2 flex items-center justify-center">🇺🇸</div> 
+                    English
+                    {currentLanguage === 'en' && <Check className="ml-auto h-4 w-4" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center cursor-pointer" onClick={() => handleLanguageChange('fr')}>
+                    <div className="w-4 h-4 mr-2 flex items-center justify-center">🇫🇷</div> 
+                    French
+                    {currentLanguage === 'fr' && <Check className="ml-auto h-4 w-4" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center cursor-pointer" onClick={() => handleLanguageChange('es')}>
+                    <div className="w-4 h-4 mr-2 flex items-center justify-center">🇪🇸</div> 
+                    Spanish
+                    {currentLanguage === 'es' && <Check className="ml-auto h-4 w-4" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center cursor-pointer" onClick={() => handleLanguageChange('de')}>
+                    <div className="w-4 h-4 mr-2 flex items-center justify-center">🇩🇪</div> 
+                    German
+                    {currentLanguage === 'de' && <Check className="ml-auto h-4 w-4" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center cursor-pointer" onClick={() => handleLanguageChange('ja')}>
+                    <div className="w-4 h-4 mr-2 flex items-center justify-center">🇯🇵</div> 
+                    Japanese
+                    {currentLanguage === 'ja' && <Check className="ml-auto h-4 w-4" />}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-red-500 focus:text-red-500 cursor-pointer">
@@ -429,9 +509,43 @@ export function MainSidebar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <Link href="/studio/billing" className="cursor-pointer">
+                      <CreditCard className="mr-2 h-4 w-4" /> Billing & Subscription
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link href="/studio/settings" className="cursor-pointer">
                       <Settings className="mr-2 h-4 w-4" /> Settings
                     </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="flex items-center">
+                    <Globe className="mr-2 h-4 w-4" /> Language
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem className="flex items-center cursor-pointer" onClick={() => handleLanguageChange('en')}>
+                    <div className="w-4 h-4 mr-2 flex items-center justify-center">🇺🇸</div> 
+                    English
+                    {currentLanguage === 'en' && <Check className="ml-auto h-4 w-4" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center cursor-pointer" onClick={() => handleLanguageChange('fr')}>
+                    <div className="w-4 h-4 mr-2 flex items-center justify-center">🇫🇷</div> 
+                    French
+                    {currentLanguage === 'fr' && <Check className="ml-auto h-4 w-4" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center cursor-pointer" onClick={() => handleLanguageChange('es')}>
+                    <div className="w-4 h-4 mr-2 flex items-center justify-center">🇪🇸</div> 
+                    Spanish
+                    {currentLanguage === 'es' && <Check className="ml-auto h-4 w-4" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center cursor-pointer" onClick={() => handleLanguageChange('de')}>
+                    <div className="w-4 h-4 mr-2 flex items-center justify-center">🇩🇪</div> 
+                    German
+                    {currentLanguage === 'de' && <Check className="ml-auto h-4 w-4" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center cursor-pointer" onClick={() => handleLanguageChange('ja')}>
+                    <div className="w-4 h-4 mr-2 flex items-center justify-center">🇯🇵</div> 
+                    Japanese
+                    {currentLanguage === 'ja' && <Check className="ml-auto h-4 w-4" />}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-red-500 focus:text-red-500 cursor-pointer">
@@ -461,9 +575,12 @@ export function MainSidebar() {
                 </div>
                 <Button 
                   className="w-full bg-gradient-to-r from-sketchdojo-primary to-sketchdojo-accent hover:opacity-90 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300"
+                  asChild
                 >
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  Upgrade Now
+                  <Link href="/studio/billing">
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Upgrade Now
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -478,8 +595,11 @@ export function MainSidebar() {
                 <TooltipTrigger asChild>
                   <Button 
                     className="w-10 h-10 p-0 rounded-full bg-gradient-to-r from-sketchdojo-primary to-sketchdojo-accent hover:opacity-90 text-white border-0 shadow-md transition-all duration-300"
+                    asChild
                   >
-                    <CreditCard className="h-4 w-4" />
+                    <Link href="/studio/billing">
+                      <CreditCard className="h-4 w-4" />
+                    </Link>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right" className="bg-gray-800 text-white border-gray-700">Upgrade to Pro</TooltipContent>
@@ -605,9 +725,12 @@ export function MainSidebar() {
             </div>
             <Button 
               className="w-full bg-gradient-to-r from-sketchdojo-primary to-sketchdojo-accent hover:opacity-90 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 py-5"
+              asChild
             >
-              <CreditCard className="h-4 w-4 mr-2" />
-              Upgrade Now
+              <Link href="/studio/billing">
+                <CreditCard className="h-4 w-4 mr-2" />
+                Upgrade Now
+              </Link>
             </Button>
           </div>
         </div>
