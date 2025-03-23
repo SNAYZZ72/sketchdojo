@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { AuthProvider } from '@/providers/auth-provider';
 // import { Toaster } from 'sonner';
 import { MainSidebar } from '@/components/studio/main-sidebar';
+import { CookieConsent } from '@/components/global/cookie-consent';
 
 const StudioLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
@@ -34,6 +35,9 @@ const StudioLayout = ({ children }: { children: React.ReactNode }) => {
           </main>
         </div>
       )}
+      
+      {/* Cookie consent banner (shown on all studio pages) */}
+      <CookieConsent />
     </AuthProvider>
   );
 };

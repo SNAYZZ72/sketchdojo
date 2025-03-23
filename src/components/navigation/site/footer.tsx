@@ -85,10 +85,10 @@ const footerLinkSections = [
   {
     title: "Legal",
     links: [
-      { name: "Terms of Service", href: "#terms" },
-      { name: "Privacy Policy", href: "#privacy" },
-      { name: "Cookie Policy", href: "#cookies" },
-      { name: "GDPR", href: "#gdpr" }
+      { name: "Terms of Service", href: "/site/legal/terms" },
+      { name: "Privacy Policy", href: "/site/legal/privacy" },
+      { name: "Cookie Policy", href: "/site/legal/cookies" },
+      { name: "GDPR", href: "/site/legal/gdpr" }
     ]
   }
 ];
@@ -115,6 +115,11 @@ export function Footer() {
 
   // Smooth scroll function
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    // If it's an external link (not a hash), don't intercept
+    if (!href.startsWith('#')) {
+      return;
+    }
+    
     e.preventDefault();
     
     const targetId = href.replace('#', '');
@@ -235,17 +240,20 @@ export function Footer() {
           </p>
           
           <div className="flex flex-wrap gap-6 justify-center">
-            <a href="#privacy" className="text-sm text-white/60 hover:text-white transition-colors duration-200">
+            <a href="/site/legal/privacy" className="text-sm text-white/60 hover:text-white transition-colors duration-200">
               Privacy
             </a>
-            <a href="#terms" className="text-sm text-white/60 hover:text-white transition-colors duration-200">
+            <a href="/site/legal/terms" className="text-sm text-white/60 hover:text-white transition-colors duration-200">
               Terms
             </a>
-            <a href="#cookies" className="text-sm text-white/60 hover:text-white transition-colors duration-200">
+            <a href="/site/legal/cookies" className="text-sm text-white/60 hover:text-white transition-colors duration-200">
               Cookies
             </a>
-            <a href="#sitemap" className="text-sm text-white/60 hover:text-white transition-colors duration-200">
-              Sitemap
+            <a href="/site/legal/cookie-preferences" className="text-sm text-white/60 hover:text-white transition-colors duration-200">
+              Cookie Preferences
+            </a>
+            <a href="/site/legal/gdpr" className="text-sm text-white/60 hover:text-white transition-colors duration-200">
+              GDPR
             </a>
           </div>
         </div>

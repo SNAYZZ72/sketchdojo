@@ -71,7 +71,9 @@ export default function ProjectStructure({ project }: ProjectStructureProps) {
           </div>
           <div>
             <p className="text-sm font-medium">Template Type</p>
-            <p className="text-sm text-muted-foreground capitalize">{project.metadata.template_type.replace('_', ' ')}</p>
+            <p className="text-sm text-muted-foreground capitalize">
+              {project.metadata.template_type ? project.metadata.template_type.replace('_', ' ') : 'Not specified'}
+            </p>
           </div>
         </div>
 
