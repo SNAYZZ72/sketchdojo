@@ -100,15 +100,15 @@ const SaveDialog: React.FC<SaveDialogProps> = ({
           <div className="space-y-2">
             <Label htmlFor="project-select" className="text-white/80">Add to Project (Optional)</Label>
             <Select 
-              value={formState.projectId || ""} 
-              onValueChange={value => setFormState((prev: FormState) => ({ ...prev, projectId: value || null }))}
+              value={formState.projectId || "none"} 
+              onValueChange={value => setFormState((prev: FormState) => ({ ...prev, projectId: value === "none" ? null : value }))}
             >
               <SelectTrigger id="project-select" className="border-white/20 bg-white/5 text-white">
                 <SelectValue placeholder="Select a project" />
               </SelectTrigger>
               <SelectContent className="bg-background/90 border-white/20">
                 <SelectItem 
-                  value=""
+                  value="none"
                   className="text-white/80 focus:text-white focus:bg-white/10"
                 >
                   No Project
