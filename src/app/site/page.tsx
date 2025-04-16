@@ -1,19 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { Header } from "@/components/navigation/site/header"
 import { Footer } from '@/components/navigation/site/footer'
-import { features, communityGallery, pricingPlans } from "@/components/constants/navigation"
 
-// Import our modular components for the home
-import { 
-  HeroSection,
-  FeaturesSection,
-  CommunitySection,
-  PricingSection,
-  FAQSection,
-  Newsletter
-} from "@/components/home"
 
 // Custom cursor effect for enhanced interactivity
 const CustomCursor = () => {
@@ -63,6 +53,9 @@ const ScrollAnimations = () => {
   
   return null;
 };
+
+// Import the Hero component from the home directory
+import { Hero } from "@/components/home/hero";
 
 export default function Home() {
   return (
@@ -116,6 +109,32 @@ export default function Home() {
         .stagger-children > *:nth-child(3) { transition-delay: 0.3s; }
         .stagger-children > *:nth-child(4) { transition-delay: 0.4s; }
         .stagger-children > *:nth-child(5) { transition-delay: 0.5s; }
+        
+        /* Radial gradient background */
+        .bg-gradient-radial {
+          background: radial-gradient(circle, var(--tw-gradient-from) 0%, var(--tw-gradient-to) 100%);
+        }
+        
+        /* Landing page specific styles */
+        .prompt-input {
+          box-shadow: 0 0 30px rgba(194, 63, 220, 0.2);
+          transition: box-shadow 0.3s ease;
+        }
+        
+        .prompt-input:focus-within {
+          box-shadow: 0 0 40px rgba(194, 63, 220, 0.4);
+        }
+        
+        /* Floating animation for background elements */
+        @keyframes float {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+          100% { transform: translateY(0px); }
+        }
+        
+        .floating {
+          animation: float 6s ease-in-out infinite;
+        }
       `}</style>
       
       {/* Custom effects */}
@@ -125,28 +144,8 @@ export default function Home() {
       {/* Header Navigation */}
       <Header />
       
-      {/* Page Sections */}
-      <HeroSection />
-      
-      <section id="features">
-        <FeaturesSection features={features} />
-      </section>
-      
-      <section id="community">
-        <CommunitySection communityGallery={communityGallery} />
-      </section>
-      
-      <section id="pricing">
-        <PricingSection pricingPlans={pricingPlans} />
-      </section>
-      
-      <div className="animate-on-scroll">
-        <FAQSection />
-      </div>
-      
-      <div className="animate-on-scroll">
-        <Newsletter />
-      </div>
+      {/* Hero Section with Landing Page */}
+      <Hero />
       
       {/* Footer */}
       <Footer />
