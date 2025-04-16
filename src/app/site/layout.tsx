@@ -1,79 +1,85 @@
-"use client";
+import { Toaster } from 'sonner';
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import { ThemeProvider } from '@/components/theme-provider';
 
-import React, { useState, useEffect } from 'react'
-import { ThemeProvider } from '@/providers/theme-provider'
-import { CookieConsent } from '@/components/global/cookie-consent'
-import { AlertCircle } from 'lucide-react'
-import Link from 'next/link'
-import { AuthProvider } from '@/providers/auth-provider'
+import './globals.css';
 
-const PrivacyAlertBanner = () => {
-  const [showAlert, setShowAlert] = useState(false);
-
-  useEffect(() => {
-    // Only show if they've accepted cookies but haven't visited preferences page
-    const hasConsent = localStorage.getItem("cookieConsent");
-    const hasVisitedPreferences = localStorage.getItem("visitedCookiePreferences");
-    
-    if (hasConsent && !hasVisitedPreferences) {
-      // Show the alert after a delay
-      const timer = setTimeout(() => {
-        setShowAlert(true);
-      }, 3000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
-  const dismissAlert = () => {
-    setShowAlert(false);
-    // Remember that they dismissed the alert
-    localStorage.setItem("visitedCookiePreferences", "true");
-  };
-
-  if (!showAlert) return null;
-
-  return (
-    <div className="fixed top-4 right-4 z-50 max-w-md bg-background border shadow-lg rounded-lg p-4 animate-in fade-in zoom-in duration-300">
-      <div className="flex items-start gap-3">
-        <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
-        <div className="flex-1">
-          <h4 className="font-medium">Customize your privacy settings</h4>
-          <p className="text-sm text-muted-foreground mt-1">
-            You've accepted cookies, but you can still customize which types of cookies we use.
-          </p>
-          <div className="flex gap-3 mt-3">
-            <Link 
-              href="/site/legal/cookie-preferences"
-              className="text-xs bg-primary hover:bg-primary/90 text-primary-foreground rounded-md px-2.5 py-1.5"
-            >
-              Manage Settings
-            </Link>
-            <button 
-              onClick={dismissAlert}
-              className="text-xs bg-muted hover:bg-muted/90 text-muted-foreground rounded-md px-2.5 py-1.5"
-            >
-              Dismiss
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+export const metadata: Metadata = {
+  metadataBase: new URL('https://chat.vercel.ai'),
+  title: 'Next.js Chatbot Template',
+  description: 'Next.js chatbot template using the AI SDK.',
 };
 
-const layout = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <ThemeProvider attribute="class" defaultTheme="dark">
-      <AuthProvider>
-        <main className="h-full">
-          {children}
-          <CookieConsent />
-          <PrivacyAlertBanner />
-        </main>
-      </AuthProvider>
-    </ThemeProvider>
-  )
-}
+export const viewport = {
+  maximumScale: 1, // Disable auto-zoom on mobile Safari
+};
 
-export default layout
+const geist = Geist({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-geist',
+});
+
+const geistMono = Geist_Mono({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-geist-mono',
+});
+
+const LIGHT_THEME_COLOR = 'hsl(0 0% 100%)';
+const DARK_THEME_COLOR = 'hsl(240deg 10% 3.92%)';
+const THEME_COLOR_SCRIPT = `\
+(function() {
+  var html = document.documentElement;
+  var meta = document.querySelector('meta[name="theme-color"]');
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.setAttribute('name', 'theme-color');
+    document.head.appendChild(meta);
+  }
+  function updateThemeColor() {
+    var isDark = html.classList.contains('dark');
+    meta.setAttribute('content', isDark ? '${DARK_THEME_COLOR}' : '${LIGHT_THEME_COLOR}');
+  }
+  var observer = new MutationObserver(updateThemeColor);
+  observer.observe(html, { attributes: true, attributeFilter: ['class'] });
+  updateThemeColor();
+})();`;
+
+export default async function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html
+      lang="en"
+      // `next-themes` injects an extra classname to the body element to avoid
+      // visual flicker before hydration. Hence the `suppressHydrationWarning`
+      // prop is necessary to avoid the React hydration mismatch warning.
+      // https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
+      suppressHydrationWarning
+      className={`${geist.variable} ${geistMono.variable}`}
+    >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: THEME_COLOR_SCRIPT,
+          }}
+        />
+      </head>
+      <body className="antialiased">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Toaster position="top-center" />
+          {children}
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
