@@ -1,6 +1,6 @@
-// src/services/api.ts
+// src/services/project-service.ts
 import { toast } from "sonner";
-import { Project } from "@/types/projects";
+import { Project, ProjectStats, Chapter } from "@/types/projects";
 
 // Response interface for API returns
 interface ApiResponse<T> {
@@ -81,6 +81,45 @@ export const projectService = {
     }
   },
 
+  // Get project with statistics
+  async getProjectWithStats(id: string): Promise<ApiResponse<Project & { stats?: ProjectStats }>> {
+    try {
+      const response = await fetchAPI<Project>(`/projects/${id}`);
+      
+      if (!response.success) {
+        return response;
+      }
+      
+      // Calculate or fetch project statistics
+      // This is a placeholder - in a real app this would either be:
+      // 1. Included in the API response from the backend
+      // 2. Fetched with a separate API call
+      // 3. Calculated based on the project data
+      const projectStats: ProjectStats = {
+        chapters: 3,
+        pages: 12,
+        characters: 5,
+        panels: 24,
+        completion_percentage: 75
+      };
+      
+      return {
+        success: true,
+        data: {
+          ...response.data!,
+          stats: projectStats
+        }
+      };
+    } catch (error: any) {
+      console.error("Error fetching project with stats:", error);
+      return { 
+        success: false, 
+        data: null, 
+        error: error.message || "Failed to load project data" 
+      };
+    }
+  },
+
   // Create a new project
   async createProject(projectData: Partial<Project>): Promise<ApiResponse<Project>> {
     try {
@@ -156,124 +195,61 @@ export const projectService = {
   }
 };
 
-// Character service
-export const characterService = {
-  // Get all characters for the current user
-  async getCharacters(projectId?: string) {
-    try {
-      const endpoint = projectId ? `/characters?project_id=${projectId}` : '/characters';
-      const response = await fetchAPI(endpoint);
-      
-      if (!response.success) {
-        toast.error(response.error || "Failed to load characters");
-      }
-      
-      return response;
-    } catch (error: any) {
-      toast.error("Failed to load characters");
-      throw error;
-    }
-  },
-
-  // Create a new character
-  async createCharacter(characterData: any) {
-    try {
-      const response = await fetchAPI('/characters', {
-        method: 'POST',
-        body: JSON.stringify(characterData)
-      });
-      
-      if (!response.success) {
-        toast.error(response.error || "Failed to create character");
-      } else {
-        toast.success("Character created successfully");
-      }
-      
-      return response;
-    } catch (error: any) {
-      toast.error("Failed to create character");
-      throw error;
-    }
-  }
-};
-
-// Background service
-export const backgroundService = {
-  // Get all backgrounds for the current user
-  async getBackgrounds(projectId?: string) {
-    try {
-      const endpoint = projectId ? `/backgrounds?project_id=${projectId}` : '/backgrounds';
-      const response = await fetchAPI(endpoint);
-      
-      if (!response.success) {
-        toast.error(response.error || "Failed to load backgrounds");
-      }
-      
-      return response;
-    } catch (error: any) {
-      toast.error("Failed to load backgrounds");
-      throw error;
-    }
-  },
-
-  // Create a new background
-  async createBackground(backgroundData: any) {
-    try {
-      const response = await fetchAPI('/backgrounds', {
-        method: 'POST',
-        body: JSON.stringify(backgroundData)
-      });
-      
-      if (!response.success) {
-        toast.error(response.error || "Failed to create background");
-      } else {
-        toast.success("Background created successfully");
-      }
-      
-      return response;
-    } catch (error: any) {
-      toast.error("Failed to create background");
-      throw error;
-    }
-  }
-};
-
-// Chapter service
+// Export other services
 export const chapterService = {
-  // Get all chapters for a project
-  async getChapters(projectId: string) {
+  // Get chapters for a project
+  async getChapters(projectId: string): Promise<ApiResponse<Chapter[]>> {
     try {
-      const response = await fetchAPI(`/chapters?project_id=${projectId}`);
-      
-      if (!response.success) {
-        toast.error(response.error || "Failed to load chapters");
-      }
-      
+      const response = await fetchAPI<Chapter[]>(`/chapters?project_id=${projectId}`);
       return response;
     } catch (error: any) {
-      toast.error("Failed to load chapters");
-      throw error;
+      console.error("Error getting chapters:", error);
+      return {
+        success: false,
+        data: null,
+        error: error.message || "Failed to load chapters"
+      };
     }
   },
-
+  
   // Create a new chapter
-  async createChapter(chapterData: any) {
+  async createChapter(chapterData: Partial<Chapter> & { project_id: string }): Promise<ApiResponse<Chapter>> {
     try {
-      const response = await fetchAPI('/chapters', {
+      const response = await fetchAPI<Chapter>('/chapters', {
         method: 'POST',
         body: JSON.stringify(chapterData)
       });
       
-      if (!response.success) {
-        toast.error(response.error || "Failed to create chapter");
-      } else {
-        toast.success("Chapter created successfully");
-      }
+      return response;
+    } catch (error: any) {
+      console.error("Error creating chapter:", error);
+      return {
+        success: false,
+        data: null,
+        error: error.message || "Failed to create chapter"
+      };
+    }
+  },
+  
+  // Update a chapter
+  async updateChapter(id: string, chapterData: Partial<Chapter>): Promise<ApiResponse<Chapter>> {
+    try {
+      const response = await fetchAPI<Chapter>(`/chapters/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(chapterData)
+      });
       
       return response;
     } catch (error: any) {
-      toast.error("Failed to create chapter");
-      throw error;
+      console.error("Error updating chapter:", error);
+      return {
+        success: false,
+        data: null,
+        error: error.message || "Failed to update chapter"
+      };
     }
   }
 };
+
+// Re-export for convenience
+export { characterService } from './api';

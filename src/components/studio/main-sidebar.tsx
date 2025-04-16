@@ -124,7 +124,12 @@ export function MainSidebar() {
   
   // Toggle sidebar collapsed state
   const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    
+    // Dispatch a custom event to notify other components
+    const event = new CustomEvent('sidebar-state-changed');
+    window.dispatchEvent(event);
   };
   
   // Get initials for avatar fallback
