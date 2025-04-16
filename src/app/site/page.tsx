@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { Header } from "@/components/navigation/site/header"
-import { Footer } from '@/components/navigation/site/footer'
-
+import { useEffect } from "react";
+import { Header } from "@/components/navigation/site/header";
+import { Footer } from '@/components/navigation/site/footer';
+import { Hero } from "@/components/home/hero";
 
 // Custom cursor effect for enhanced interactivity
 const CustomCursor = () => {
@@ -53,9 +53,6 @@ const ScrollAnimations = () => {
   
   return null;
 };
-
-// Import the Hero component from the home directory
-import { Hero } from "@/components/home/hero";
 
 export default function Home() {
   return (
@@ -109,6 +106,7 @@ export default function Home() {
         .stagger-children > *:nth-child(3) { transition-delay: 0.3s; }
         .stagger-children > *:nth-child(4) { transition-delay: 0.4s; }
         .stagger-children > *:nth-child(5) { transition-delay: 0.5s; }
+        .stagger-children > *:nth-child(6) { transition-delay: 0.6s; }
         
         /* Radial gradient background */
         .bg-gradient-radial {
@@ -144,11 +142,11 @@ export default function Home() {
       {/* Header Navigation */}
       <Header />
       
-      {/* Hero Section with Landing Page */}
+      {/* Hero Section with Lovable-inspired Landing Page */}
       <Hero />
       
       {/* Footer */}
       <Footer />
     </main>
-  )
+  );
 }
