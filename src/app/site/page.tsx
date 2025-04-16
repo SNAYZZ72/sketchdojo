@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { Header } from "@/components/navigation/site/header";
 import { Footer } from '@/components/navigation/site/footer';
-import { Hero } from "@/components/home/hero";
+import { Hero, ProjectsShowcase } from "@/components/home";
 
 // Custom cursor effect for enhanced interactivity
 const CustomCursor = () => {
@@ -144,6 +144,9 @@ export default function Home() {
       
       {/* Hero Section with Lovable-inspired Landing Page */}
       <Hero />
+
+      {/* Projects Showcase Section */}
+      <ProjectsShowcase />
       
       {/* Footer */}
       <Footer />
