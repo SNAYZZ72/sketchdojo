@@ -4,7 +4,6 @@ import React from 'react';
 import { usePathname } from 'next/navigation';
 import { AuthProvider } from '@/providers/auth-provider';
 // import { Toaster } from 'sonner';
-import { MainSidebar } from '@/components/studio/main-sidebar';
 import { CookieConsent } from '@/components/global/cookie-consent';
 
 const StudioLayout = ({ children }: { children: React.ReactNode }) => {
@@ -26,7 +25,6 @@ const StudioLayout = ({ children }: { children: React.ReactNode }) => {
       ) : (
         // For non-auth pages, show the responsive sidebar layout
         <div className="flex min-h-screen bg-background">
-          <MainSidebar />
           <main className="flex-1 overflow-auto w-full">
             {/* Content with padding for mobile menu button */}
             <div className="md:pl-0 pt-16 md:pt-0">
