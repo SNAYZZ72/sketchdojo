@@ -1,250 +1,230 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { 
-  Save, Download, Eye, 
-  ChevronDown, ChevronRight, Layout, LayoutGrid, Maximize2, Heart, Bookmark, PanelRight,
-  Edit3, PlusCircle, Move, Copy, Trash, MousePointer, Layers,
-  AlertCircle, MessageSquare
-} from 'lucide-react';
-import { useChat } from '@/providers/chat-provider';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useChat } from '@/providers/chat-provider';
 import { useAutoRedirectFromPrompt } from '@/lib/auto-redirect';
-//import { ChatInputCompact } from '@/components/chat/chat-input-compact';
 import { cn } from '@/lib/utils';
+
+// Components
+import { ChatHeader } from '@/components/chat/chat-header';
 import { ChatMessages } from '@/components/chat/chat-messages';
 import { PromptForm } from '@/components/chat/prompt-form';
+import { ChatImageGallery } from '@/components/chat/chat-image-gallery';
+import { ChatImageEditor } from '@/components/chat/chat-image-editor';
+import { ChatLoadingState } from '@/components/chat/chat-loading-state';
+import { DeleteConfirmDialog } from '@/components/chat/delete-confirm-dialog';
+import { MobileMenuButton } from '@/components/chat/mobile-menu-button';
 
+/**
+ * Main Chat Page Component
+ * Handles the display of a specific chat conversation and its associated images
+ */
 export default function ChatPage() {
+  // Router and params
   const router = useRouter();
   const params = useParams();
-  //const searchParams = useSearchParams();
   const chatId = params.id as string;
-  const { chats, currentChat, setCurrentChat, generateResponse, generateResponseWithNewChat, createChat, isLoading, deleteChat } = useChat();
-  const [input, setInput] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  //const [showMorePanels, setShowMorePanels] = useState(false);
+  
+  // Chat provider state
+  const { 
+    chats, 
+    currentChat, 
+    setCurrentChat, 
+    generateResponse, 
+    generateResponseWithNewChat, 
+    createChat, 
+    deleteChat, 
+    isLoading,
+    reloadChatsFromStorage
+  } = useChat();
+
+  // Local state
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [activeMode, setActiveMode] = useState<'preview' | 'editor'>('preview');
   const [viewMode, setViewMode] = useState<'vertical' | 'grid'>('vertical');
   const [selectedPanel, setSelectedPanel] = useState<number | null>(null);
-  const [activeMode, setActiveMode] = useState<'preview' | 'editor'>('preview');
-  const [zoom, setZoom] = useState(100);
-  const [selectedEditorPanel, setSelectedEditorPanel] = useState<number | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [zoom, setZoom] = useState(100);
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [chatLoadRetries, setChatLoadRetries] = useState(0);
+  const [chatNotFound, setChatNotFound] = useState(false);
 
-  // Use our auto-redirect hook to handle any initial prompts
+  // Use auto-redirect hook for handling initial prompts
   useAutoRedirectFromPrompt(createChat, generateResponse, generateResponseWithNewChat);
 
-  // Set current chat based on ID
+  // Set current chat based on URL parameter with retry logic
   useEffect(() => {
-    console.log("ChatPage: Checking chat ID:", chatId);
-    console.log("ChatPage: Current chat:", currentChat?.id);
-    console.log("ChatPage: Total chats in provider:", chats.length);
-
-    if (chatId) {
-      // Check if this chat exists in our chats array
+    // Function to load chat with retry mechanism
+    const loadChat = async () => {
+      console.log(`ChatPage: Attempting to load chat ID: ${chatId} (Attempt ${chatLoadRetries + 1})`);
+      
+      // If we have retries, add a delay
+      if (chatLoadRetries > 0) {
+        // Wait longer with each retry
+        await new Promise(resolve => setTimeout(resolve, chatLoadRetries * 300));
+      }
+      
+      // Try to reload from storage for retries
+      if (chatLoadRetries > 0) {
+        console.log("ChatPage: Reloading chats from storage before retry");
+        reloadChatsFromStorage();
+      }
+      
+      // Check if chat exists in provider
       const chatExists = chats.some(c => c.id === chatId);
-      console.log("ChatPage: Chat exists in provider:", chatExists);
+      console.log(`ChatPage: Chat exists in provider: ${chatExists}`);
       
-      // If the chat doesn't exist in our provider, try to load it from localStorage
-      if (!chatExists) {
-        console.log("ChatPage: Chat not found in provider, checking localStorage");
-        const savedChats = localStorage.getItem('sketchdojo-chats');
-        
-        if (savedChats) {
-          try {
-            const parsedChats = JSON.parse(savedChats);
-            const localChat = parsedChats.find((c: any) => c.id === chatId);
-            
-            if (localChat) {
-              console.log("ChatPage: Found chat in localStorage:", localChat.id);
-              // We found the chat in localStorage, but we can't directly add it to the provider
-              // since we don't have access to setChats. 
-              // Let's just log this for debugging purposes
-            } else {
-              console.log("ChatPage: Chat not found in localStorage either");
-              // Consider redirecting to the studio page if chat is not found anywhere
-              // router.push('/studio/chat');
-            }
-          } catch (error) {
-            console.error("ChatPage: Error parsing localStorage chats:", error);
-          }
-        }
-      }
-      
-      // Set the current chat regardless
-      if (!currentChat || currentChat.id !== chatId) {
-        console.log("ChatPage: Setting current chat to:", chatId);
+      if (chatExists) {
+        console.log(`ChatPage: Setting current chat to: ${chatId}`);
         setCurrentChat(chatId);
+        setIsPageLoading(false);
+        return;
       }
+      
+      // If we've reached max retries, show not found state
+      if (chatLoadRetries >= 3) {
+        console.log("ChatPage: Max retries reached, showing not found state");
+        setChatNotFound(true);
+        setIsPageLoading(false);
+        return;
+      }
+      
+      // Increment retry counter and try again
+      setChatLoadRetries(prev => prev + 1);
+    };
+    
+    // Run the load function
+    if (chatId && (!currentChat || currentChat.id !== chatId)) {
+      loadChat();
+    } else {
+      // We already have the right chat loaded
+      setIsPageLoading(false);
     }
-  }, [chatId, currentChat, chats, setCurrentChat]);
+  }, [chatId, currentChat, chats, setCurrentChat, chatLoadRetries, reloadChatsFromStorage]);
 
-  // Scroll to bottom of messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [currentChat?.messages]);
-
-  // Focus input on load
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  const handleSubmit = async (content: string) => {
-    if (!content.trim() || isLoading) return;
-    await generateResponse(content);
-    setInput('');
+  // Handle chat deletion
+  const handleDeleteChat = async () => {
+    if (!currentChat) return;
+    
+    try {
+      await deleteChat(currentChat.id);
+      setShowDeleteConfirm(false);
+      router.push('/studio/chat');
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+    }
   };
 
-  /*const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(input);
-    }
-  };*/
-
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
+  // Handle sidebar toggle
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
   };
 
-  // Adjust zoom in the editor
+  // Handle zoom controls
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 10, 200));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 10, 30));
-  //const handleZoomReset = () => setZoom(100);
+  const handleZoomReset = () => setZoom(100);
 
-  const handleDeleteChat = () => {
-    if (!currentChat) return;
-    setShowDeleteConfirm(true);
+  // Extract panels from current chat messages
+  const extractPanels = () => {
+    if (!currentChat) return [];
+    
+    return currentChat.messages
+      .filter(m => m.role === 'assistant' && m.images && m.images.length > 0)
+      .flatMap((message, messageIndex) => 
+        message.images?.map((image, imageIndex) => ({
+          url: image,
+          id: `${message.id}-${imageIndex}`,
+          panelNumber: messageIndex * 10 + imageIndex + 1
+        })) || []
+      );
   };
 
-  const confirmDeleteChat = () => {
-    if (!currentChat) return;
-    deleteChat(currentChat.id);
-    setShowDeleteConfirm(false);
-    router.push('/studio/chat');
+  const panels = extractPanels();
+
+  // Set the first panel as selected if none is selected
+  useEffect(() => {
+    if (panels.length > 0 && selectedPanel === null) {
+      setSelectedPanel(0);
+    }
+  }, [panels, selectedPanel]);
+
+  // Handle retry when chat is not found
+  const handleRetry = () => {
+    setIsPageLoading(true);
+    setChatNotFound(false);
+    setChatLoadRetries(0);
   };
 
-  const cancelDeleteChat = () => {
-    setShowDeleteConfirm(false);
+  // Handle navigation to create new chat
+  const handleCreateNewChat = () => {
+    router.push('/studio/chat/new');
   };
 
-  if (!currentChat) {
+  // Show loading state while loading
+  if (isPageLoading) {
+    return <ChatLoadingState message={`Loading your manga experience... ${chatLoadRetries > 0 ? `(Attempt ${chatLoadRetries})` : ''}`} />;
+  }
+  
+  // Show not found state if chat doesn't exist after retries
+  if (chatNotFound || !currentChat) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-gray-900 to-black">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 rounded-full border-4 border-t-transparent border-purple-500 animate-spin"></div>
-          <div className="text-white/70">Loading your manga...</div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex flex-col items-center justify-center p-4">
+        <div className="max-w-md w-full bg-black/30 backdrop-blur-md rounded-2xl p-6 border border-white/10 text-center">
+          <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-red-500/20 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-3">Chat Not Found</h2>
+          <p className="text-white/70 mb-6">
+            We couldn't find the chat you're looking for (ID: {chatId.substring(0, 8)}...).
+            It might have been deleted or hasn't been fully saved yet.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={handleRetry}
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={handleCreateNewChat}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+            >
+              Create New Chat
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Filter for assistant messages with images
-  const panelsToDisplay = currentChat.messages
-    .filter(m => m.role === 'assistant' && m.images && m.images.length > 0)
-    .flatMap((message, messageIndex) => 
-      message.images?.map((image, imageIndex) => ({
-        url: image,
-        id: `${message.id}-${imageIndex}`,
-        panelNumber: messageIndex * 10 + imageIndex + 1
-      })) || []
-    );
-
-  // Set the first panel as selected if we have panels and none selected
-  useEffect(() => {
-    if (panelsToDisplay.length > 0 && selectedPanel === null) {
-      setSelectedPanel(0);
-    }
-    if (panelsToDisplay.length > 0 && selectedEditorPanel === null) {
-      setSelectedEditorPanel(0);
-    }
-  }, [panelsToDisplay, selectedPanel, selectedEditorPanel]);
-
   return (
     <div className="h-screen bg-gradient-to-br from-gray-900 to-black flex flex-col">
       {/* Delete Confirmation Dialog */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-black/80 border border-white/10 rounded-lg p-6 max-w-md w-full shadow-2xl">
-            <div className="flex items-center gap-3 mb-4">
-              <AlertCircle className="h-6 w-6 text-red-500" />
-              <h3 className="text-lg font-medium text-white">Delete Chat</h3>
-            </div>
-            <p className="text-white/70 mb-6">
-              Are you sure you want to delete this chat? This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
-              <Button 
-                variant="outline" 
-                className="border-white/10 text-white/70 hover:text-white hover:bg-white/5"
-                onClick={cancelDeleteChat}
-              >
-                Cancel
-              </Button>
-              <Button 
-                className="bg-red-600 hover:bg-red-700 text-white"
-                onClick={confirmDeleteChat}
-              >
-                Delete
-              </Button>
-            </div>
-          </div>
-        </div>
+        <DeleteConfirmDialog
+          onConfirm={handleDeleteChat}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
       )}
     
-      {/* Header */}
-      <div className="bg-black/70 border-b border-white/10 p-2 px-3 sm:px-4 flex items-center justify-between h-12 sm:h-14 backdrop-blur-sm">
-        <div className="text-white font-bold flex items-center gap-1 sm:gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="h-7 w-7 sm:h-8 sm:w-8 text-purple-400 hover:bg-purple-500/20 transition-colors"
-            onClick={toggleCollapse}
-          >
-            {isCollapsed ? <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" /> : <PanelRight className="h-4 w-4 sm:h-5 sm:w-5" />}
-          </Button>
-          <div className="flex flex-col">
-            <span className="text-purple-400 text-sm sm:text-base">SketchDojo</span>
-            <span className="text-[10px] sm:text-xs text-white/60 -mt-1">Studio</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-1 sm:gap-3">
-          {currentChat && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-white/70 hover:text-red-400 flex items-center gap-1 hover:bg-red-500/10 transition-colors h-8 px-2 sm:px-3" 
-              onClick={handleDeleteChat}
-            >
-              <Trash className="h-4 w-4" />
-              <span className="hidden sm:inline">Delete</span>
-            </Button>
-          )}
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-white/70 hover:text-white flex items-center gap-1 hover:bg-white/10 transition-colors h-8 px-2 sm:px-3" 
-            onClick={() => {}}
-          >
-            <Save className="h-4 w-4" />
-            <span className="hidden sm:inline">Save</span>
-          </Button>
-          <Button 
-            size="sm" 
-            className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-1 shadow-lg shadow-purple-700/20 transition-all h-8 px-2 sm:px-3"
-          >
-            <Download className="h-4 w-4" />
-            <span className="hidden sm:inline">Export</span>
-          </Button>
-        </div>
-      </div>
+      {/* Header with controls */}
+      <ChatHeader
+        chat={currentChat}
+        onToggleSidebar={toggleSidebar}
+        onDelete={() => setShowDeleteConfirm(true)}
+        isCollapsed={sidebarCollapsed}
+      />
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Chat Section */}
-        <div className={`${isCollapsed ? 'w-0 overflow-hidden' : 'w-1/3'} transition-all duration-300 border-r border-white/10 flex flex-col bg-black/40 backdrop-blur-sm`}>
+        {/* Chat Messages Section */}
+        <div className={cn(
+          "transition-all duration-300 border-r border-white/10 flex flex-col bg-black/40 backdrop-blur-sm",
+          sidebarCollapsed ? "w-0 overflow-hidden" : "w-1/3"
+        )}>
           <div className="p-3 px-4 border-b border-white/10 flex items-center justify-between">
             <div className="text-white font-medium text-sm flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-purple-500"></div>
@@ -252,9 +232,8 @@ export default function ChatPage() {
             </div>
           </div>
           
-          <div className="flex-1 overflow-auto p-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent" id="chat-messages">
+          <div className="flex-1 overflow-auto p-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
             <ChatMessages />
-            <div ref={messagesEndRef} />
           </div>
           
           <div className="p-4 border-t border-white/10 bg-black/20">
@@ -263,8 +242,11 @@ export default function ChatPage() {
         </div>
 
         {/* Preview/Editor Section */}
-        <div className={`${isCollapsed ? 'w-full' : 'flex-1'} flex flex-col transition-all duration-300`}>
-          {/* Tab bar */}
+        <div className={cn(
+          "flex flex-col transition-all duration-300",
+          sidebarCollapsed ? "w-full" : "flex-1"
+        )}>
+          {/* Mode Selection Tabs */}
           <div className="bg-black/60 p-2 flex items-center justify-between border-b border-white/10 backdrop-blur-sm">
             <div className="flex bg-black/50 rounded-md overflow-hidden p-0.5 mx-2 sm:mx-4">
               <button 
@@ -277,7 +259,10 @@ export default function ChatPage() {
                 )}
               >
                 <span className="flex items-center gap-1.5">
-                  <Edit3 className="h-3 w-3" />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                  </svg>
                   <span className="hidden xs:inline">Editor</span>
                 </span>
               </button>
@@ -291,13 +276,16 @@ export default function ChatPage() {
                 )}
               >
                 <span className="flex items-center gap-1.5">
-                  <Eye className="h-3 w-3" />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
                   <span className="hidden xs:inline">Preview</span>
                 </span>
               </button>
             </div>
             
-            {/* Update view controls for mobile */}
+            {/* View mode controls for Preview mode */}
             {activeMode === 'preview' && (
               <div className="flex items-center gap-1 sm:gap-2 mr-2 sm:mr-4">
                 <button 
@@ -308,8 +296,13 @@ export default function ChatPage() {
                       ? "bg-purple-600 text-white" 
                       : "bg-black/30 text-white/60 hover:text-white hover:bg-black/50"
                   )}
+                  aria-label="Vertical view"
                 >
-                  <Layout className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                    <line x1="3" y1="15" x2="21" y2="15"></line>
+                  </svg>
                 </button>
                 <button 
                   onClick={() => setViewMode('grid')} 
@@ -319,32 +312,52 @@ export default function ChatPage() {
                       ? "bg-purple-600 text-white" 
                       : "bg-black/30 text-white/60 hover:text-white hover:bg-black/50"
                   )}
+                  aria-label="Grid view"
                 >
-                  <LayoutGrid className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                  </svg>
                 </button>
               </div>
             )}
             
-            {/* Make zoom controls more compact on mobile */}
+            {/* Zoom controls for Editor mode */}
             {activeMode === 'editor' && (
               <div className="flex items-center gap-1 sm:gap-2 mr-2 sm:mr-4">
                 <div className="flex items-center bg-black/30 rounded-lg p-1">
                   <button 
                     onClick={handleZoomOut}
                     className="p-1 text-white/60 hover:text-white transition-colors"
+                    aria-label="Zoom out"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sm:w-4 sm:h-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
                   </button>
-                  <span className="text-white/70 text-[10px] sm:text-xs px-1 sm:px-2">{zoom}%</span>
+                  <span className="text-white/70 text-xs px-1">{zoom}%</span>
                   <button 
                     onClick={handleZoomIn}
                     className="p-1 text-white/60 hover:text-white transition-colors"
+                    aria-label="Zoom in"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sm:w-4 sm:h-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="12" y1="5" x2="12" y2="19"></line>
                       <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </button>
+                  <button 
+                    onClick={handleZoomReset}
+                    className="p-1 text-white/60 hover:text-white transition-colors ml-1"
+                    aria-label="Reset zoom"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 2v6h-6"></path>
+                      <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                      <path d="M3 22v-6h6"></path>
+                      <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
                     </svg>
                   </button>
                 </div>
@@ -352,298 +365,30 @@ export default function ChatPage() {
             )}
           </div>
 
-          {/* Adjust the preview mode to be responsive */}
+          {/* Main content based on active mode */}
           {activeMode === 'preview' && (
-            <div className="flex-1 overflow-auto bg-gradient-to-b from-gray-900/80 to-black/90 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-              {/* Preview header - simplify on mobile */}
-              <div className="sticky top-0 z-10 bg-black/60 backdrop-blur-sm flex items-center justify-between p-2 sm:p-3 border-b border-white/5">
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <div className="bg-purple-600/20 rounded-full h-6 w-6 sm:h-8 sm:w-8 flex items-center justify-center text-purple-400">
-                    <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-white/90 text-xs sm:text-sm font-medium">Manga Preview</span>
-                    <span className="text-white/40 text-[10px] sm:text-xs">{panelsToDisplay.length} panels</span>
-                  </div>
-                </div>
-                
-                {/* Simplify controls on mobile */}
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <button className="bg-black/40 hover:bg-black/60 rounded-full h-6 w-6 sm:h-8 sm:w-8 flex items-center justify-center text-white/70 hover:text-white transition-colors">
-                    <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
-                  </button>
-                  <button className="bg-purple-600 hover:bg-purple-700 rounded-full h-6 sm:h-8 px-2 sm:px-3 flex items-center gap-1 text-white shadow-lg shadow-purple-600/20 transition-colors">
-                    <Download className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="text-[10px] sm:text-xs">Download</span>
-                  </button>
-                </div>
-              </div>
-              
-              {/* Responsive manga panels */}
-              {viewMode === 'vertical' ? (
-                <div className="flex flex-col items-center gap-4 sm:gap-6 px-3 sm:px-6 py-4 sm:py-8">
-                  {panelsToDisplay.length > 0 ? (
-                    panelsToDisplay.map((panel, index) => (
-                      <div 
-                        key={panel.id} 
-                        className="w-full max-w-3xl group relative"
-                        onClick={() => setSelectedPanel(index)}
-                      >
-                        <div className={cn(
-                          "transition-all duration-300 rounded-xl overflow-hidden shadow-xl sm:shadow-2xl",
-                          selectedPanel === index 
-                            ? "ring-2 sm:ring-4 ring-purple-500 ring-offset-2 sm:ring-offset-4 ring-offset-black/50" 
-                            : "border border-white/10 hover:border-white/30"
-                        )}>
-                          <Image 
-                            src={panel.url} 
-                            alt={`Panel ${panel.panelNumber}`} 
-                            className="w-full h-auto bg-black/40 hover:scale-[1.01] transition-transform"
-                            width={800}
-                            height={1200}
-                            unoptimized={true}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-2 sm:p-4">
-                            <div className="p-1 sm:p-2 text-white text-xs sm:text-sm font-medium backdrop-blur-sm bg-black/30 rounded-lg">
-                              Panel {panel.panelNumber}
-                            </div>
-                            <div className="flex gap-2">
-                              <button className="p-1 sm:p-2 backdrop-blur-sm bg-black/30 rounded-lg text-white/80 hover:text-white">
-                                <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="mt-2 sm:mt-3 flex justify-between">
-                          <span className="text-white/60 text-xs sm:text-sm">
-                            {index + 1} of {panelsToDisplay.length}
-                          </span>
-                          <div className="flex gap-1">
-                            <button className="text-white/60 hover:text-white p-1">
-                              <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
-                            </button>
-                            <button className="text-white/60 hover:text-white p-1">
-                              <Bookmark className="h-3 w-3 sm:h-4 sm:w-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center text-white/50 py-10 sm:py-20 px-4 flex flex-col items-center justify-center gap-3 sm:gap-4 bg-black/30 rounded-xl max-w-md mx-auto mt-6 sm:mt-10 border border-white/5">
-                      <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-black/50 flex items-center justify-center">
-                        <Eye className="h-6 w-6 sm:h-8 sm:w-8 text-white/30" />
-                      </div>
-                      <div className="space-y-1 sm:space-y-2">
-                        <h3 className="text-white text-sm sm:text-base font-medium">No manga panels yet</h3>
-                        <p className="text-white/50 text-xs sm:text-sm">Start a conversation to create your manga. Describe your characters, setting, and story.</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 p-4">
-                  {panelsToDisplay.length > 0 ? (
-                    panelsToDisplay.map((panel, index) => (
-                      <div 
-                        key={panel.id} 
-                        className="group relative rounded-lg overflow-hidden border border-white/10 hover:border-white/30 transition-all cursor-pointer"
-                        onClick={() => setSelectedPanel(index)}
-                      >
-                        <Image 
-                          src={panel.url} 
-                          alt={`Panel ${panel.panelNumber}`} 
-                          className="w-full h-auto aspect-[3/4] object-cover bg-black/40"
-                          width={400}
-                          height={533}
-                          unoptimized
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="absolute bottom-0 left-0 right-0 p-2 text-white text-xs sm:text-sm font-medium flex justify-between items-center">
-                            <span>Panel {panel.panelNumber}</span>
-                            <button className="bg-black/50 p-1 rounded hover:bg-black/70">
-                              <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                            </button>
-                          </div>
-                        </div>
-                        {selectedPanel === index && (
-                          <div className="absolute inset-0 border-2 sm:border-4 border-purple-500 rounded-lg pointer-events-none"></div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="col-span-1 xs:col-span-2 md:col-span-3 text-center text-white/50 py-10 sm:py-20 flex flex-col items-center justify-center gap-3 sm:gap-4 bg-black/30 rounded-xl border border-white/5">
-                      <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-black/50 flex items-center justify-center">
-                        <Eye className="h-6 w-6 sm:h-8 sm:w-8 text-white/30" />
-                      </div>
-                      <div className="space-y-1 sm:space-y-2">
-                        <h3 className="text-white text-sm sm:text-base font-medium">No manga panels yet</h3>
-                        <p className="text-white/50 text-xs">Start a conversation to create your manga.</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              {/* Thumbnail navigation - more compact on mobile */}
-              {panelsToDisplay.length > 0 && (
-                <div className="sticky bottom-0 w-full bg-black/70 backdrop-blur-md border-t border-white/10 p-2 flex items-center justify-center">
-                  <div className="w-full max-w-2xl flex items-center gap-2">
-                    <div className="text-white/60 text-xs w-8 sm:w-14 text-center">
-                      {selectedPanel !== null ? selectedPanel + 1 : 1}/{panelsToDisplay.length}
-                    </div>
-                    <div className="flex-1 flex items-center justify-center gap-1 overflow-x-auto py-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                      {panelsToDisplay.map((panel, index) => (
-                        <button
-                          key={`thumb-${panel.id}`}
-                          onClick={() => setSelectedPanel(index)}
-                          className={cn(
-                            "h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0 border rounded-md overflow-hidden transition-all",
-                            selectedPanel === index 
-                              ? "border-purple-500 shadow-lg shadow-purple-500/30" 
-                              : "border-white/10 hover:border-white/30"
-                          )}
-                        >
-                          <Image 
-                            src={panel.url} 
-                            alt={`Thumbnail ${index + 1}`} 
-                            className="h-full w-full object-cover" 
-                            width={80}
-                            height={80}
-                            unoptimized
-                          />
-                        </button>
-                      ))}
-                    </div>
-                    <div className="w-8 sm:w-14 flex justify-end">
-                      <button className="bg-black/50 hover:bg-black/70 rounded-full h-7 w-7 flex items-center justify-center text-white/70 hover:text-white transition-colors">
-                        <ChevronDown className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            <ChatImageGallery
+              panels={panels}
+              viewMode={viewMode}
+              selectedPanel={selectedPanel}
+              onSelectPanel={setSelectedPanel}
+            />
           )}
           
-          {/* Editor Mode */}
           {activeMode === 'editor' && (
-            <div className="flex flex-1 overflow-hidden">
-              {/* Editor Canvas */}
-              <div className="flex-1 bg-gradient-to-b from-gray-800 to-gray-900 overflow-auto relative p-4">
-                <div 
-                  className="min-h-full w-full min-w-full flex items-center justify-center relative"
-                  style={{
-                    backgroundImage: 'radial-gradient(circle, rgba(75, 75, 75, 0.1) 1px, transparent 1px)',
-                    backgroundSize: '20px 20px'
-                  }}
-                >
-                  <div 
-                    className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-transform origin-center"
-                    style={{ transform: `translate(-50%, -50%) scale(${zoom/100})` }}
-                  >
-                    {/* Canvas Content */}
-                    <div className="w-[1200px] h-[800px] flex flex-wrap gap-4 p-8 content-start">
-                      {panelsToDisplay.length > 0 ? (
-                        panelsToDisplay.map((panel, index) => (
-                          <div 
-                            key={panel.id} 
-                            className={cn(
-                              "group border relative cursor-move", 
-                              selectedEditorPanel === index 
-                                ? "border-purple-500 shadow-xl shadow-purple-500/20"
-                                : "border-white/10 hover:border-white/30"
-                            )}
-                            style={{ width: '280px', height: '350px' }}
-                            onClick={() => setSelectedEditorPanel(index)}
-                          >
-                            <Image 
-                              src={panel.url} 
-                              alt={`Panel ${panel.panelNumber}`} 
-                              className="w-full h-full object-cover"
-                              width={280}
-                              height={350}
-                              unoptimized={true}
-                            />
-                            <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm p-2 flex justify-between items-center">
-                              <span className="text-white/80 text-xs">Panel {panel.panelNumber}</span>
-                              <div className="flex gap-1">
-                                <button className="w-6 h-6 flex items-center justify-center text-white/60 hover:text-white">
-                                  <Copy className="h-3 w-3" />
-                                </button>
-                                <button className="w-6 h-6 flex items-center justify-center text-white/60 hover:text-white">
-                                  <Trash className="h-3 w-3" />
-                                </button>
-                                <button className="w-6 h-6 flex items-center justify-center text-white/60 hover:text-white">
-                                  <Edit3 className="h-3 w-3" />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="text-center text-white/40 max-w-md">
-                            <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-black/30 flex items-center justify-center">
-                              <Layers className="h-10 w-10 text-white/20" />
-                            </div>
-                            <h3 className="text-white/80 text-lg mb-2">No Manga Panels Yet</h3>
-                            <p className="text-white/40 text-sm mb-4">Start a conversation in the chat to generate manga panels that you can edit here.</p>
-                            <Button 
-                              className="bg-purple-600 hover:bg-purple-700"
-                              onClick={() => setActiveMode('preview')}
-                            >
-                              Switch to Preview
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Editor Tools Sidebar */}
-              <div className="w-64 border-l border-white/10 bg-black/50 p-3 backdrop-blur-sm flex flex-col">
-                <div className="text-white/80 font-medium text-sm mb-4 pb-2 border-b border-white/10">Editor Tools</div>
-                
-                <div className="space-y-4">
-                  <div className="p-2 bg-black/20 rounded-lg">
-                    <div className="text-white/60 text-xs mb-2">Tools</div>
-                    <div className="grid grid-cols-4 gap-1">
-                      <button className="flex flex-col items-center justify-center p-2 rounded bg-purple-600/20 hover:bg-purple-600/30 text-white/80">
-                        <MousePointer className="h-4 w-4 mb-1" />
-                        <span className="text-[10px]">Select</span>
-                      </button>
-                      <button className="flex flex-col items-center justify-center p-2 rounded bg-black/30 hover:bg-black/40 text-white/60">
-                        <Move className="h-4 w-4 mb-1" />
-                        <span className="text-[10px]">Move</span>
-                      </button>
-                      <button className="flex flex-col items-center justify-center p-2 rounded bg-black/30 hover:bg-black/40 text-white/60">
-                        <PlusCircle className="h-4 w-4 mb-1" />
-                        <span className="text-[10px]">Add</span>
-                      </button>
-                      <button className="flex flex-col items-center justify-center p-2 rounded bg-black/30 hover:bg-black/40 text-white/60">
-                        <Trash className="h-4 w-4 mb-1" />
-                        <span className="text-[10px]">Delete</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <ChatImageEditor
+              panels={panels}
+              zoom={zoom}
+              selectedPanel={selectedPanel}
+              onSelectPanel={setSelectedPanel}
+            />
           )}
         </div>
       </div>
 
-      {/* Mobile-only floating action button to toggle chat panel */}
-      {isCollapsed && (
-        <button
-          onClick={toggleCollapse}
-          className="md:hidden fixed bottom-4 right-4 z-20 bg-purple-600 hover:bg-purple-700 text-white rounded-full p-3 shadow-lg"
-        >
-          <MessageSquare className="h-5 w-5" />
-        </button>
+      {/* Mobile toggle button */}
+      {sidebarCollapsed && (
+        <MobileMenuButton onClick={toggleSidebar} />
       )}
     </div>
   );

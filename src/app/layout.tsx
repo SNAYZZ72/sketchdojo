@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Poppins, Italianno } from 'next/font/google'
 import { ThemeProvider } from '@/providers/theme-provider'
 import './styles/globals.css'
+import { ChatProvider } from '@/providers/chat-provider'
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -32,7 +33,9 @@ export default function RootLayout({
     <html lang="en" className={`${poppins.variable} ${italianno.variable}`} suppressHydrationWarning>
       <body className={poppins.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          {children}
+          <ChatProvider>
+            {children}
+          </ChatProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -1,4 +1,5 @@
 'use client';
+import { Chat } from '../types/chat';
 
 /**
  * StorageService - A service for handling localStorage operations
@@ -8,14 +9,45 @@ class StorageService {
   /**
    * Set an item in localStorage with error handling
    */
-  setItem<T>(key: string, value: T): boolean { // Changed from 'any' to '<T>'
+  setItem<T>(key: string, value: T): boolean {
     try {
       const serialized = typeof value === 'string' ? value : JSON.stringify(value);
-      localStorage.setItem(key, serialized);
-      console.log(`StorageService: Saved ${key} to localStorage`);
-      return true;
+      
+      // First try to set the item normally
+      try {
+        localStorage.setItem(key, serialized);
+        console.log(`StorageService: Saved ${key} to localStorage`);
+        return true;
+      } catch (error) {
+        // If we hit quota, try cleaning up old data
+        if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+          console.warn('Storage quota exceeded, attempting cleanup...');
+          
+          // Get all chat data
+          const chats = this.getItem<Chat[]>(STORAGE_KEYS.CHATS);
+          if (Array.isArray(chats) && chats.length > 5) {
+            // Sort by oldest first and remove 20% of oldest chats
+            const sorted = [...chats].sort((a, b) => a.updatedAt - b.updatedAt);
+            const toKeep = Math.floor(sorted.length * 0.8);
+            const cleanedChats = sorted.slice(-toKeep);
+            
+            // Try saving again with cleaned data
+            try {
+              localStorage.setItem(key, JSON.stringify(cleanedChats));
+              console.log('Successfully saved after cleanup');
+              return true;
+            } catch (cleanupError) {
+              console.error('Still failed after cleanup:', cleanupError);
+              return false;
+            }
+          }
+        }
+        
+        console.error(`StorageService: Error saving ${key} to localStorage:`, error);
+        return false;
+      }
     } catch (error) {
-      console.error(`StorageService: Error saving ${key} to localStorage:`, error);
+      console.error(`StorageService: Unexpected error in setItem:`, error);
       return false;
     }
   }
@@ -91,9 +123,10 @@ class StorageService {
 
 // Constants for consistent localStorage keys
 export const STORAGE_KEYS = {
-  INITIAL_PROMPT: 'initial_prompt',
+  INITIAL_PROMPT: 'sketchdojo-initial-prompt',
   CHATS: 'sketchdojo-chats',
-};
+  INITIAL_CHAT_ID: 'sketchdojo-initial-chat-id'
+} as const;
 
 // Export a singleton instance of the service
-export const storageService = new StorageService(); 
+export const storageService = new StorageService();

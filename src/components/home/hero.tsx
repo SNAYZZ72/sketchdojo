@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from 'next/image';
 import { Loader2, Sparkles, Send, Info, Paperclip, X, Wand2 } from "lucide-react";
 import { 
@@ -16,6 +16,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { useRouter } from "next/navigation";
 import { geminiService } from "@/lib/chat/gemini-service";
 import { storageService, STORAGE_KEYS } from "@/lib/storage-service";
+import { useChat } from "@/providers/chat-provider";
 
 // Enhanced prompt examples with categories and icons
 const promptCategories = [
@@ -77,6 +78,7 @@ const PromptInput = () => {
   const [isPublic, setIsPublic] = useState(true);
   const { user, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
+  const { createChat, updateChatAndSave, synchronizeChats } = useChat();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -84,6 +86,13 @@ const PromptInput = () => {
   useEffect(() => {
     setCharacterCount(promptValue.length);
   }, [promptValue]);
+
+  // Handle navigation separately to prevent infinite loops
+  const handleNavigation = useCallback(async (chatId: string) => {
+    await synchronizeChats();
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    router.push(`/studio/chat/${chatId}`);
+  }, [router, synchronizeChats]);
   
   // Handle actions based on authentication status
   const handleAuthAction = (action: () => void | Promise<void>) => {
@@ -102,6 +111,7 @@ const PromptInput = () => {
     action();
   };
   
+  
   // Handle focus on the prompt input
   const handlePromptFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
     if (isAuthLoading) return;
@@ -116,18 +126,37 @@ const PromptInput = () => {
   const handlePromptSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    handleAuthAction(() => {
+    handleAuthAction(async () => {
       // Set loading state
       setIsLoading(true);
       
       try {
         console.log("Hero: Submitting prompt:", promptValue.slice(0, 30));
-        // For authenticated users, store the prompt in localStorage via storageService
-        storageService.setItem(STORAGE_KEYS.INITIAL_PROMPT, promptValue);
-        console.log("Hero: Saved prompt to storage service, redirecting with directProcess=true");
         
-        // IMPORTANT: Make sure directProcess is set to true to ensure a new chat is created
-        router.push('/studio/chat?directProcess=true');
+        // Create chat first before navigation
+        const newChat = await createChat(promptValue);
+        
+        // Add the user's message to the chat
+        await updateChatAndSave(newChat.id, {
+          messages: [{
+            id: Math.random().toString(36).substring(2, 15),
+            role: 'user',
+            content: promptValue,
+            timestamp: Date.now()
+          }]
+        });
+        
+        // Force storage sync
+        synchronizeChats();
+        
+        // Delay to ensure storage operations complete
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Store the chat ID instead of the prompt
+        storageService.setItem(STORAGE_KEYS.INITIAL_CHAT_ID, newChat.id);
+        
+        // Use the navigation handler
+        await handleNavigation(newChat.id);
       } catch (error) {
         console.error('Error handling prompt submission:', error);
         setIsLoading(false);
@@ -158,8 +187,8 @@ const PromptInput = () => {
   };
   
   // Handle selecting an example prompt
-  const selectExample = (prompt: string) => {
-    handleAuthAction(() => {
+  const selectExample = async (prompt: string) => {
+    handleAuthAction(async () => {
       setPromptValue(prompt);
       
       // Set loading state
@@ -171,8 +200,8 @@ const PromptInput = () => {
         storageService.setItem(STORAGE_KEYS.INITIAL_PROMPT, prompt);
         console.log("Hero: Saved example to storage service, redirecting with directProcess=true");
         
-        // IMPORTANT: Make sure directProcess is set to true to ensure a new chat is created
-        router.push('/studio/chat?directProcess=true');
+        // Use the navigation handler
+        await handleNavigation('new');
       } catch (error) {
         console.error('Error handling example selection:', error);
         setIsLoading(false);
