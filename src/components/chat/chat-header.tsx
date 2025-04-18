@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
 import { Download, Save, Trash, ChevronRight, PanelRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Chat } from '@/providers/chat-provider';
@@ -22,7 +21,7 @@ export function ChatHeader({
   onDelete, 
   isCollapsed 
 }: ChatHeaderProps) {
-  const router = useRouter();
+
 
   // Function to export the current chat
   const handleExport = () => {
