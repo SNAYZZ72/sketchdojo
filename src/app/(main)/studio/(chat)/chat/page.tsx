@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useChat } from '@/providers/chat-provider';
 import { storageService, STORAGE_KEYS } from '@/lib/storage-service';
@@ -55,34 +55,8 @@ export default function ChatLandingPage() {
   const [statusMessage, setStatusMessage] = useState('Loading...');
   const [isEnhancing, setIsEnhancing] = useState(false);
   
-  // Check for initial prompt on mount
-  useEffect(() => {
-    // Force reload from localStorage to ensure we have the latest chats
-    reloadChatsFromStorage();
-    
-    // Check for an initial prompt from storage
-    const checkInitialPrompt = async () => {
-      try {
-        const initialPrompt = storageService.getItem<string>(STORAGE_KEYS.INITIAL_PROMPT, false);
-        
-        if (initialPrompt) {
-          // We have a prompt in storage - process it
-          await processStoredPrompt(initialPrompt as string);
-        } else {
-          // No prompt - show UI
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error("Error checking initial prompt:", error);
-        setIsLoading(false);
-      }
-    };
-    
-    checkInitialPrompt();
-  }, [directProcess, reloadChatsFromStorage]);
-  
-  // Process a prompt stored in localStorage
-  const processStoredPrompt = async (prompt: string) => {
+  // Process a prompt stored in localStorage - Using useCallback with dependencies
+  const processStoredPrompt = useCallback(async (prompt: string) => {
     try {
       setIsProcessing(true);
       setStatusMessage('Creating your manga...');
@@ -110,7 +84,33 @@ export default function ChatLandingPage() {
       setIsLoading(false);
       setStatusMessage('Error creating manga. Please try again.');
     }
-  };
+  }, [createChat, generateResponseWithNewChat, router]);
+  
+  // Check for initial prompt on mount
+  useEffect(() => {
+    // Force reload from localStorage to ensure we have the latest chats
+    reloadChatsFromStorage();
+    
+    // Check for an initial prompt from storage
+    const checkInitialPrompt = async () => {
+      try {
+        const initialPrompt = storageService.getItem<string>(STORAGE_KEYS.INITIAL_PROMPT, false);
+        
+        if (initialPrompt) {
+          // We have a prompt in storage - process it
+          await processStoredPrompt(initialPrompt as string);
+        } else {
+          // No prompt - show UI
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error("Error checking initial prompt:", error);
+        setIsLoading(false);
+      }
+    };
+    
+    checkInitialPrompt();
+  }, [directProcess, reloadChatsFromStorage, processStoredPrompt]);
   
   // Handle prompt submission from UI
   const handleCreateManga = async () => {

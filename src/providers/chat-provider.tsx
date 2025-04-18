@@ -1,6 +1,8 @@
+// src/providers/chat-provider.tsx - with fixed dependencies
+
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { geminiService } from '@/lib/chat/gemini-service';
 import { stabilityService } from '@/lib/chat/stability-service';
@@ -81,6 +83,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   
+  // Using refs to avoid dependency loops and prevent unnecessary re-renders
+  const chatsRef = useRef<Chat[]>([]);
+  const currentChatRef = useRef<Chat | null>(null);
+  
+  // Update refs when state changes
+  useEffect(() => {
+    chatsRef.current = chats;
+  }, [chats]);
+  
+  useEffect(() => {
+    currentChatRef.current = currentChat;
+  }, [currentChat]);
+  
   // Get data from storage using our storage service
   const getFromStorage = useCallback(() => {
     return storageService.getItem<Chat[]>(STORAGE_KEYS.CHATS, true);
@@ -91,98 +106,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     return storageService.setItem(STORAGE_KEYS.CHATS, data);
   }, []);
   
-  // Load chats from storage on initial render
-  useEffect(() => {
-    const loadChats = () => {
-      const savedData = getFromStorage();
-      if (savedData && Array.isArray(savedData)) {
-        console.log('Loaded chats from storage:', savedData.length);
-        setChats(savedData);
-        
-        // Set the most recent chat as current if no current chat is set
-        if (savedData.length > 0 && !currentChat) {
-          const sortedChats = [...savedData].sort((a, b) => b.updatedAt - a.updatedAt);
-          setCurrentChatState(sortedChats[0]);
-        }
-        
-        setIsInitialized(true);
-        return true;
-      }
-      
-      // No saved data or error - initialize with empty state
-      console.log('No chats found in storage, initializing empty state');
-      setChats([]);
-      setCurrentChatState(null);
-      setIsInitialized(true);
-      return false;
-    };
-    
-    loadChats();
-  }, [getFromStorage, currentChat]);
-
-  // Synchronize chats with storage
-  const synchronizeChats = useCallback(() => {
-    if (!isInitialized) return false;
-    console.log('Synchronizing chats with storage');
-    return saveToStorage(chats);
-  }, [chats, isInitialized, saveToStorage]);
-
-  // Save chats to storage whenever they change
-  useEffect(() => {
-    if (isInitialized) {
-      synchronizeChats();
-    }
-  }, [chats, isInitialized, synchronizeChats]);
-  
-  // Set current chat by ID
-  const setCurrentChat = useCallback((chatId: string | null) => {
-    console.log('Setting current chat to:', chatId);
-    if (!chatId) {
-      setCurrentChatState(null);
-      return;
-    }
-    
-    const chat = chats.find(c => c.id === chatId);
-    if (chat) {
-      console.log('Found chat in state, setting as current:', chat.id);
-      setCurrentChatState(chat);
-    } else {
-      console.warn(`Chat with ID ${chatId} not found in state, checking storage`);
-      
-      // Check storage as a fallback
-      const savedData = getFromStorage();
-      if (savedData && Array.isArray(savedData)) {
-        const savedChat = savedData.find(c => c.id === chatId);
-        if (savedChat) {
-          console.log('Found chat in storage, setting as current:', savedChat.id);
-          
-          // Update the chats array to include this chat
-          const updatedChats = [...chats];
-          if (!chats.some(c => c.id === savedChat.id)) {
-            updatedChats.push(savedChat);
-            setChats(updatedChats);
-            
-            // Force save to ensure state is consistent
-            saveToStorage(updatedChats);
-          }
-          
-          setCurrentChatState(savedChat);
-        } else {
-          console.warn(`Chat with ID ${chatId} not found, creating new chat`);
-          const newChat = createChat();
-          const updatedChats = [...chats, newChat];
-          setChats(updatedChats);
-          saveToStorage(updatedChats);
-          setCurrentChatState(newChat);
-        }
-      } else {
-        console.error(`No chats found in storage, can't set current chat ${chatId}`);
-        setCurrentChatState(null);
-      }
-    }
-  }, [chats, getFromStorage, saveToStorage, currentChat]);
-
-  // Create a new chat
+  // Create a new chat - defined early since it's used in other functions
   const createChat = useCallback((promptOrTitle?: string): Chat => {
     let chatTitle = 'New Chat';
     
@@ -220,6 +144,99 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     
     return newChat;
   }, [saveToStorage]);
+  
+  // Load chats from storage on initial render
+  useEffect(() => {
+    const loadChats = () => {
+      const savedData = getFromStorage();
+      if (savedData && Array.isArray(savedData)) {
+        console.log('Loaded chats from storage:', savedData.length);
+        setChats(savedData);
+        
+        // Set the most recent chat as current if no current chat is set
+        if (savedData.length > 0 && !currentChat) {
+          const sortedChats = [...savedData].sort((a, b) => b.updatedAt - a.updatedAt);
+          setCurrentChatState(sortedChats[0]);
+        }
+        
+        setIsInitialized(true);
+        return true;
+      }
+      
+      // No saved data or error - initialize with empty state
+      console.log('No chats found in storage, initializing empty state');
+      setChats([]);
+      setCurrentChatState(null);
+      setIsInitialized(true);
+      return false;
+    };
+    
+    loadChats();
+  }, [getFromStorage, currentChat]);
+
+  // Synchronize chats with storage
+  const synchronizeChats = useCallback(() => {
+    if (!isInitialized) return false;
+    console.log('Synchronizing chats with storage');
+    return saveToStorage(chatsRef.current);
+  }, [isInitialized, saveToStorage]);
+
+  // Save chats to storage whenever they change
+  useEffect(() => {
+    if (isInitialized) {
+      synchronizeChats();
+    }
+  }, [chats, isInitialized, synchronizeChats]);
+  
+  // Set current chat by ID - with fixed dependencies
+  const setCurrentChat = useCallback((chatId: string | null) => {
+    console.log('Setting current chat to:', chatId);
+    if (!chatId) {
+      setCurrentChatState(null);
+      return;
+    }
+    
+    const currentChats = chatsRef.current;
+    const chat = currentChats.find(c => c.id === chatId);
+    
+    if (chat) {
+      console.log('Found chat in state, setting as current:', chat.id);
+      setCurrentChatState(chat);
+    } else {
+      console.warn(`Chat with ID ${chatId} not found in state, checking storage`);
+      
+      // Check storage as a fallback
+      const savedData = getFromStorage();
+      if (savedData && Array.isArray(savedData)) {
+        const savedChat = savedData.find(c => c.id === chatId);
+        if (savedChat) {
+          console.log('Found chat in storage, setting as current:', savedChat.id);
+          
+          // Update the chats array to include this chat
+          const updatedChats = [...currentChats];
+          if (!currentChats.some(c => c.id === savedChat.id)) {
+            updatedChats.push(savedChat);
+            setChats(updatedChats);
+            
+            // Force save to ensure state is consistent
+            saveToStorage(updatedChats);
+          }
+          
+          setCurrentChatState(savedChat);
+        } else {
+          console.warn(`Chat with ID ${chatId} not found, creating new chat`);
+          const newChat = createChat();
+          const updatedChats = [...currentChats, newChat];
+          setChats(updatedChats);
+          saveToStorage(updatedChats);
+          setCurrentChatState(newChat);
+        }
+      } else {
+        console.error(`No chats found in storage, can't set current chat ${chatId}`);
+        setCurrentChatState(null);
+      }
+    }
+  }, [getFromStorage, saveToStorage, createChat]);
 
   // New helper function to update a chat and explicitly save to storage
   const updateChatAndSave = useCallback(async (chatId: string, updatedProps: Partial<Chat>) => {
@@ -256,7 +273,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         console.log('Save to storage result:', saveResult);
         
         // Update current chat if it's the one being modified
-        if (currentChat?.id === chatId) {
+        const currChat = currentChatRef.current;
+        if (currChat?.id === chatId) {
           setCurrentChatState(prev => 
             prev ? { ...prev, ...updatedProps, updatedAt: Date.now() } : prev
           );
@@ -266,7 +284,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         return updatedChats;
       });
     });
-  }, [currentChat, saveToStorage]);
+  }, [saveToStorage]);
 
   // Update an existing chat
   const updateChat = useCallback((chatId: string, updatedProps: Partial<Chat>) => {
@@ -303,16 +321,18 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     });
     
     // Also update current chat if it's the one being modified
-    if (currentChat?.id === chatId) {
+    const currChat = currentChatRef.current;
+    if (currChat?.id === chatId) {
       setCurrentChatState(prev => 
         prev ? { ...prev, ...updatedProps, updatedAt: Date.now() } : prev
       );
     }
-  }, [currentChat, saveToStorage]);
+  }, [saveToStorage]);
 
   // Add a message to the current chat
   const addMessage = useCallback((message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
-    if (!currentChat) {
+    const currChat = currentChatRef.current;
+    if (!currChat) {
       console.warn('No current chat to add message to');
       return;
     }
@@ -323,18 +343,18 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       timestamp: Date.now()
     };
     
-    console.log('Adding message to chat:', currentChat.id);
+    console.log('Adding message to chat:', currChat.id);
     
-    const updatedMessages = [...currentChat.messages, newMessage];
-    updateChat(currentChat.id, { messages: updatedMessages });
-  }, [currentChat, updateChat]);
+    const updatedMessages = [...currChat.messages, newMessage];
+    updateChat(currChat.id, { messages: updatedMessages });
+  }, [updateChat]);
 
   // Generate a response in the current chat
   const generateResponse = useCallback(async (prompt: string): Promise<string | null> => {
     console.log('Generating response for prompt in current context');
     
     // Create a new chat if needed
-    let chatToUse = currentChat;
+    let chatToUse = currentChatRef.current;
     let isNewChat = false;
     
     if (!chatToUse) {
@@ -396,7 +416,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       updateChat(chatToUse.id, { messages: finalMessages });
       
       // Make sure the updated chat is current
-      if (isNewChat || !currentChat) {
+      if (isNewChat || !currentChatRef.current) {
         setCurrentChat(chatToUse.id);
       }
       
@@ -410,7 +430,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [createChat, currentChat, updateChat, setCurrentChat, synchronizeChats]);
+  }, [createChat, updateChat, setCurrentChat, synchronizeChats]);
 
   // Generate a response in a new chat
   const generateResponseWithNewChat = useCallback(async (prompt: string): Promise<string | null> => {
@@ -472,7 +492,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       }
       
       // Get current chat messages to ensure we have the latest state
-      const chat = chats.find(c => c.id === newChat.id);
+      const currentChats = chatsRef.current;
+      const chat = currentChats.find(c => c.id === newChat.id);
       const currentMessages = chat ? chat.messages : updatedMessages;
       
       // Update chat with assistant message
@@ -492,7 +513,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [createChat, updateChatAndSave, chats, setCurrentChat, synchronizeChats]);
+  }, [createChat, updateChatAndSave, setCurrentChat, synchronizeChats]);
 
   // Generate just an image
   const generateImage = useCallback(async (prompt: string): Promise<string | null> => {
@@ -524,8 +545,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     });
     
     // Update current chat if needed
-    if (currentChat?.id === chatId) {
-      const remainingChats = chats.filter(chat => chat.id !== chatId);
+    const currChat = currentChatRef.current;
+    const currChats = chatsRef.current;
+    
+    if (currChat?.id === chatId) {
+      const remainingChats = currChats.filter(chat => chat.id !== chatId);
       if (remainingChats.length > 0) {
         const sortedChats = [...remainingChats].sort((a, b) => b.updatedAt - a.updatedAt);
         setCurrentChatState(sortedChats[0]);
@@ -533,22 +557,26 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         setCurrentChatState(null);
       }
     }
-  }, [chats, currentChat, saveToStorage]);
+  }, [saveToStorage]);
 
-  // Reload chats from storage
+  // Reload chats from storage - with fixed dependencies
   const reloadChatsFromStorage = useCallback((): boolean => {
     console.log('Reloading chats from storage');
     
     const savedData = getFromStorage();
     if (savedData && Array.isArray(savedData)) {
+      // Get current values from refs to avoid dependency cycles
+      const currentChats = chatsRef.current;
+      const currChat = currentChatRef.current;
+      
       // Only update if chats actually changed
-      const chatsChanged = JSON.stringify(savedData) !== JSON.stringify(chats);
+      const chatsChanged = JSON.stringify(savedData) !== JSON.stringify(currentChats);
       if (chatsChanged) {
         setChats(savedData);
         
         // Update current chat if it exists in the reloaded data
-        if (currentChat) {
-          const reloadedCurrentChat = savedData.find(chat => chat.id === currentChat.id);
+        if (currChat) {
+          const reloadedCurrentChat = savedData.find(chat => chat.id === currChat.id);
           if (reloadedCurrentChat) {
             setCurrentChatState(reloadedCurrentChat);
           } else {
@@ -566,12 +594,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       return true;
     }
     return false;
-  }, [getFromStorage]); // Removed chats and currentChat from dependencies to prevent infinite loops
+  }, [getFromStorage]); // Using refs instead of dependencies for chats and currentChat
 
   // Export all chats as JSON string
   const exportAllChats = useCallback((): string => {
-    return JSON.stringify(chats);
-  }, [chats]);
+    return JSON.stringify(chatsRef.current);
+  }, []);
 
   // Import chats from JSON string
   const importChats = useCallback((jsonData: string): boolean => {
