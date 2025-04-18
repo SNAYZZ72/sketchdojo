@@ -74,13 +74,8 @@ export default function SignInPage() {
       // Refresh the page to update auth state
       router.refresh();
       
-      // Check if there's a prompt parameter in the URL to redirect with it
-      const searchParams = new URLSearchParams(window.location.search);
-      const prompt = searchParams.get('prompt');
-      const redirectPath = prompt ? `/studio?prompt=${encodeURIComponent(prompt)}` : '/studio';
-      
-      // Navigate to studio dashboard on successful sign in
-      router.push(redirectPath);
+      // Redirect to the landing page after successful sign in
+      router.push('/site');
       
     } catch (error) {
       setErrorMessage("An unexpected error occurred. Please try again.");

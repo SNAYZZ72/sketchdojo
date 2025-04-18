@@ -5,6 +5,9 @@ import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { Search, Menu, X, Moon, Sun, ChevronDown, Bell } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter, usePathname } from "next/navigation";
+import { useAuth } from "@/providers/auth-provider";
+import { createClient } from "@/utils/supabase/client";
 
 // Navigation items
 const navigationItems = [
@@ -24,11 +27,107 @@ const SkipToContent = () => (
   </a>
 );
 
+// User dropdown menu component
+const UserDropdown = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+  const { signOut, user } = useAuth();
+
+  // Close the dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.user-dropdown')) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/');
+  };
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!user || !user.user_metadata?.full_name) return "U";
+    
+    const fullName = user.user_metadata.full_name as string;
+    const nameParts = fullName.split(' ');
+    
+    if (nameParts.length > 1) {
+      return `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase();
+    }
+    
+    return fullName.slice(0, 2).toUpperCase();
+  };
+
+  return (
+    <div className="relative user-dropdown">
+      <button
+        className="flex items-center space-x-1 text-white/90 hover:text-white transition-colors duration-200"
+        onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+      >
+        <div className="w-8 h-8 rounded-full bg-sketchdojo-primary/20 flex items-center justify-center text-white">
+          <span className="text-xs">{getUserInitials()}</span>
+        </div>
+        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-black/90 backdrop-blur-lg border border-white/10 overflow-hidden z-50"
+          >
+            <div className="py-1">
+              <Link
+                href="/studio"
+                className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-sketchdojo-primary/20 transition-colors duration-200"
+                onClick={() => setIsOpen(false)}
+              >
+                Profile
+              </Link>
+              <Link
+                href="/studio/settings"
+                className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-sketchdojo-primary/20 transition-colors duration-200"
+                onClick={() => setIsOpen(false)}
+              >
+                Settings
+              </Link>
+              <div className="border-t border-white/10 my-1"></div>
+              <button
+                className="block w-full text-left px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-sketchdojo-primary/20 transition-colors duration-200"
+                onClick={handleSignOut}
+              >
+                Sign out
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { user, isLoading, signOut } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
   
   // Throttled scroll handler for better performance
   const handleScroll = useCallback(() => {
@@ -172,22 +271,31 @@ export function Header() {
               )}
             </button>
 
-            {/* Auth Links - Desktop */}
-            <div className="hidden sm:flex items-center space-x-3">
-              <Link 
-                href="/studio/sign-in" 
-                className="relative overflow-hidden py-2 px-3 text-white/90 hover:text-white transition-colors duration-300 group text-sm"
-              >
-                <span className="relative z-10">Login</span>
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-sketchdojo-primary to-sketchdojo-accent transform origin-left transition-transform duration-300 scale-x-0 group-hover:scale-x-100"></span>
-              </Link>
-              <Link 
-                href="/studio/sign-up" 
-                className="py-2 px-4 bg-gradient-to-r from-sketchdojo-primary to-sketchdojo-accent text-white rounded-full font-medium text-sm transition-all duration-300 hover:shadow-lg hover:shadow-sketchdojo-primary/30 transform hover:-translate-y-0.5 hover:brightness-110"
-              >
-                Sign Up
-              </Link>
-            </div>
+            {/* Conditional rendering based on login status */}
+            {isLoading ? (
+              <div className="w-8 h-8 relative">
+                <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+              </div>
+            ) : user ? (
+              <UserDropdown />
+            ) : (
+              /* Auth Links - Desktop */
+              <div className="hidden sm:flex items-center space-x-3">
+                <Link 
+                  href="/studio/sign-in" 
+                  className="relative overflow-hidden py-2 px-3 text-white/90 hover:text-white transition-colors duration-300 group text-sm"
+                >
+                  <span className="relative z-10">Login</span>
+                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-sketchdojo-primary to-sketchdojo-accent transform origin-left transition-transform duration-300 scale-x-0 group-hover:scale-x-100"></span>
+                </Link>
+                <Link 
+                  href="/studio/sign-up" 
+                  className="py-2 px-4 bg-gradient-to-r from-sketchdojo-primary to-sketchdojo-accent text-white rounded-full font-medium text-sm transition-all duration-300 hover:shadow-lg hover:shadow-sketchdojo-primary/30 transform hover:-translate-y-0.5 hover:brightness-110"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
 
             {/* Mobile Menu Button */}
             <button
@@ -276,22 +384,57 @@ export function Header() {
                 ))}
               </nav>
               
-              {/* Mobile Auth Links */}
+              {/* Mobile Auth Links - conditionally rendered */}
               <div className="flex flex-col items-center space-y-6 w-full">
-                <Link
-                  href="/studio/sign-in"
-                  className="text-xl text-white/90 hover:text-sketchdojo-primary transition-colors duration-300 w-full text-center py-2"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/studio/sign-up"
-                  className="py-3 px-8 bg-gradient-to-r from-sketchdojo-primary to-sketchdojo-accent text-white rounded-full font-medium text-lg transition-all duration-300 hover:shadow-lg hover:shadow-sketchdojo-primary/30 w-full max-w-xs text-center"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Sign Up Free
-                </Link>
+                {isLoading ? (
+                  <div className="py-4">
+                    <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin mx-auto"></div>
+                  </div>
+                ) : user ? (
+                  <>
+                    <Link
+                      href="/studio"
+                      className="text-xl text-white/90 hover:text-sketchdojo-primary transition-colors duration-300 w-full text-center py-2"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      My Profile
+                    </Link>
+                    <Link
+                      href="/studio/settings"
+                      className="text-xl text-white/90 hover:text-sketchdojo-primary transition-colors duration-300 w-full text-center py-2"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Settings
+                    </Link>
+                    <button
+                      className="text-xl text-white/90 hover:text-sketchdojo-primary transition-colors duration-300 w-full text-center py-2"
+                      onClick={async () => {
+                        setIsMenuOpen(false);
+                        await signOut();
+                        router.push('/');
+                      }}
+                    >
+                      Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/studio/sign-in"
+                      className="text-xl text-white/90 hover:text-sketchdojo-primary transition-colors duration-300 w-full text-center py-2"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      href="/studio/sign-up"
+                      className="py-3 px-8 bg-gradient-to-r from-sketchdojo-primary to-sketchdojo-accent text-white rounded-full font-medium text-lg transition-all duration-300 hover:shadow-lg hover:shadow-sketchdojo-primary/30 w-full max-w-xs text-center"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Sign Up Free
+                    </Link>
+                  </>
+                )}
               </div>
               
               {/* Theme toggle - Mobile */}

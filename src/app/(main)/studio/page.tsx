@@ -1,19 +1,28 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
 export default function StudioPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   
-  // Redirect to main page after a brief delay
+  // Redirect to main page after a brief delay, preserving any query parameters
   useEffect(() => {
     const timeout = setTimeout(() => {
-      router.push("/studio");
+      // Check if there's a prompt parameter in the URL
+      const promptParam = searchParams.get('prompt');
+      
+      // Redirect to the chat interface, forwarding the prompt parameter if it exists
+      if (promptParam) {
+        router.push(`/studio/chat?prompt=${encodeURIComponent(promptParam)}`);
+      } else {
+        router.push("/studio/chat");
+      }
     }, 100);
     
     return () => clearTimeout(timeout);
-  }, [router]);
+  }, [router, searchParams]);
   
   return (
     <div className="h-screen flex items-center justify-center">

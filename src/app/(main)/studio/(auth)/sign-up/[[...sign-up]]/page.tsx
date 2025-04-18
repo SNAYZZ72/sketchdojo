@@ -114,7 +114,7 @@ export default function SignUpPage() {
         email: values.email,
         password: values.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/studio/sign-in`,
+          emailRedirectTo: `${window.location.origin}/site`,
           data: {
             full_name: values.full_name,
           }
@@ -151,7 +151,7 @@ export default function SignUpPage() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/studio`,
+          redirectTo: `${window.location.origin}/site`,
         },
       });
 

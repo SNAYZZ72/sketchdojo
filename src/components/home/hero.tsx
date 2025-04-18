@@ -10,6 +10,10 @@ import {
 } from "@/components/ui/tooltip";
 import { Switch } from "@/components/ui/switch";
 import TextareaAutosize from 'react-textarea-autosize';
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/providers/auth-provider";
+import { useRouter } from "next/navigation";
+import { geminiService } from "@/lib/chat/gemini-service";
 
 // Enhanced prompt examples with categories and icons
 const promptCategories = [
@@ -61,7 +65,7 @@ const promptCategories = [
   }
 ];
 
-// Prompt input component with enhanced UI
+// PromptInput component with enhanced UI
 const PromptInput = () => {
   const [promptValue, setPromptValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -71,6 +75,8 @@ const PromptInput = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isPublic, setIsPublic] = useState(true);
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const router = useRouter();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -79,49 +85,102 @@ const PromptInput = () => {
     setCharacterCount(promptValue.length);
   }, [promptValue]);
   
-  const handlePromptSubmit = (e: React.FormEvent) => {
+  // Handle actions based on authentication status
+  const handleAuthAction = (action: () => void | Promise<void>) => {
+    if (isAuthLoading) {
+      // Still checking auth state, do nothing yet
+      return;
+    }
+    
+    if (!user) {
+      // Not authenticated, redirect to sign in
+      router.push("/studio/sign-in");
+      return;
+    }
+    
+    // User is authenticated, perform the action
+    action();
+  };
+  
+  // Handle focus on the prompt input
+  const handlePromptFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+    if (isAuthLoading) return;
+    
+    if (!user) {
+      e.preventDefault();
+      router.push("/studio/sign-in");
+    }
+  };
+  
+  // Handle the prompt submission
+  const handlePromptSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!promptValue.trim() && !imageFile) return;
     
-    setIsLoading(true);
-    
-    // Create FormData to handle both text and image
-    const formData = new FormData();
-    formData.append('prompt', promptValue);
-    if (imageFile) {
-      formData.append('image', imageFile);
-    }
-    formData.append('isPublic', isPublic.toString());
-    
-    // Add a subtle delay to show loading state
-    setTimeout(() => {
-      // Here you would normally submit the formData with fetch
-      // For now, just redirect as in the original code
-      window.location.href = "/studio/sign-in?redirect=studio&prompt=" + encodeURIComponent(promptValue);
-    }, 300);
+    handleAuthAction(() => {
+      // Set loading state
+      setIsLoading(true);
+      
+      try {
+        console.log("Hero: Submitting prompt:", promptValue.slice(0, 30));
+        // For authenticated users, store the prompt in localStorage
+        localStorage.setItem('initial_prompt', promptValue);
+        console.log("Hero: Saved prompt to localStorage, redirecting with directProcess=true");
+        
+        // IMPORTANT: Make sure directProcess is set to true to ensure a new chat is created
+        router.push('/studio/chat?directProcess=true');
+      } catch (error) {
+        console.error('Error handling prompt submission:', error);
+        setIsLoading(false);
+      }
+    });
   };
   
-  const enhancePromptWithAI = () => {
-    if (!promptValue.trim()) return;
-    
-    setIsEnhancing(true);
-    
-    // Simulate AI enhancement
-    setTimeout(() => {
-      const enhancedPrompt = `${promptValue} [Enhanced with dramatic lighting, detailed character expressions, vibrant colors, and dynamic composition]`;
-      setPromptValue(enhancedPrompt);
-      setIsEnhancing(false);
-    }, 800);
+  // Handle enhancing the prompt with AI
+  const enhancePromptWithAI = async () => {
+    handleAuthAction(async () => {
+      if (!promptValue.trim()) return;
+      
+      setIsEnhancing(true);
+      
+      try {
+        // Use the Gemini service to enhance the prompt
+        const enhancedPrompt = await geminiService.enhancePrompt(promptValue);
+        setPromptValue(enhancedPrompt);
+      } catch (error) {
+        console.error('Error enhancing prompt:', error);
+        // If error occurs, fall back to a simple enhancement
+        const fallbackEnhanced = `${promptValue} [Enhanced with dramatic lighting, detailed character expressions, vibrant colors, and dynamic composition]`;
+        setPromptValue(fallbackEnhanced);
+      } finally {
+        setIsEnhancing(false);
+      }
+    });
   };
   
+  // Handle selecting an example prompt
   const selectExample = (prompt: string) => {
-    setPromptValue(prompt);
-    // Focus input after selecting an example
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+    handleAuthAction(() => {
+      setPromptValue(prompt);
+      
+      // Set loading state
+      setIsLoading(true);
+      
+      try {
+        console.log("Hero: Selected example prompt:", prompt.slice(0, 30));
+        // Store the prompt in localStorage
+        localStorage.setItem('initial_prompt', prompt);
+        console.log("Hero: Saved example to localStorage, redirecting with directProcess=true");
+        
+        // IMPORTANT: Make sure directProcess is set to true to ensure a new chat is created
+        router.push('/studio/chat?directProcess=true');
+      } catch (error) {
+        console.error('Error handling example selection:', error);
+        setIsLoading(false);
+      }
+    });
   };
   
+  // Clear the prompt input
   const clearPrompt = () => {
     setPromptValue("");
     if (inputRef.current) {
@@ -129,12 +188,16 @@ const PromptInput = () => {
     }
   };
   
+  // Handle clicking the attach button
   const handleAttachClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
+    handleAuthAction(() => {
+      if (fileInputRef.current) {
+        fileInputRef.current.click();
+      }
+    });
   };
   
+  // Handle file selection for attachments
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
@@ -150,6 +213,7 @@ const PromptInput = () => {
     }
   };
   
+  // Remove the selected image
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
@@ -172,12 +236,16 @@ const PromptInput = () => {
               placeholder="Describe your manga idea..."
               value={promptValue}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-                setPromptValue(e.target.value);
-                setIsTyping(e.target.value.length > 0);
+                // Only allow typing if authenticated or checking auth
+                if (user || isAuthLoading) {
+                  setPromptValue(e.target.value);
+                  setIsTyping(e.target.value.length > 0);
+                }
               }}
-              className="w-full min-h-[64px] py-4 pl-10 sm:pl-14 pr-10 sm:pr-12 text-base sm:text-lg rounded-2xl border-none bg-transparent focus-visible:ring-0 text-white placeholder:text-white/50 resize-none"
+              onFocus={handlePromptFocus}
+              className={`w-full min-h-[64px] py-4 pl-10 sm:pl-14 pr-10 sm:pr-12 text-base sm:text-lg rounded-2xl border-none bg-transparent focus-visible:ring-0 text-white placeholder:text-white/50 resize-none ${!user && !isAuthLoading ? "cursor-pointer" : ""}`}
               onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-                if (e.key === "Enter" && !e.shiftKey && promptValue.trim()) {
+                if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   handlePromptSubmit(e);
                 }
@@ -199,6 +267,13 @@ const PromptInput = () => {
               </button>
             )}
           </div>
+          
+          {/* Show loading state while checking auth */}
+          {isAuthLoading && (
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+              <div className="w-6 h-6 border-2 border-sketchdojo-primary/30 border-t-sketchdojo-primary rounded-full animate-spin"></div>
+            </div>
+          )}
           
           {/* Image preview section */}
           {imagePreview && (
@@ -242,7 +317,7 @@ const PromptInput = () => {
               <button
                 type="button"
                 onClick={handleAttachClick}
-                className="flex items-center gap-1 sm:gap-1.5 text-white/60 hover:text-white/90 transition-colors"
+                className={`flex items-center gap-1 sm:gap-1.5 text-white/60 hover:text-white/90 transition-colors ${!user && !isAuthLoading ? "cursor-pointer" : ""}`}
               >
                 <Paperclip className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
                 <span>Attach</span>
@@ -255,21 +330,15 @@ const PromptInput = () => {
                     <button
                       type="button"
                       onClick={enhancePromptWithAI}
-                      disabled={!promptValue.trim() || isEnhancing}
-                      className={`flex items-center gap-1 sm:gap-1.5 transition-colors ${
-                        !promptValue.trim() 
-                          ? 'text-white/30 cursor-not-allowed' 
-                          : isEnhancing 
-                            ? 'text-sketchdojo-primary/70' 
-                            : 'text-white/60 hover:text-white/90'
-                      }`}
+                      className={`flex items-center gap-1 sm:gap-1.5 text-white/60 hover:text-white/90 transition-colors ${!user && !isAuthLoading ? "cursor-pointer" : ""}`}
+                      disabled={isEnhancing}
                     >
                       {isEnhancing ? (
                         <Loader2 className="h-3 sm:h-3.5 w-3 sm:w-3.5 animate-spin" />
                       ) : (
                         <Wand2 className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
                       )}
-                      <span>Enhance</span>
+                      <span>{isEnhancing ? "Enhancing..." : "Enhance"}</span>
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="bg-black/90 border-sketchdojo-primary/50 text-white max-w-xs p-3">
@@ -304,25 +373,25 @@ const PromptInput = () => {
                 />
               </div>
               
-              {/* Create button moved next to Public toggle */}
+              {/* Create button */}
               <button 
                 type="submit" 
-                className={`h-7 sm:h-8 px-3 sm:px-4 rounded-full transition-all duration-300 flex items-center justify-center ${
-                  (!promptValue.trim() && !imageFile) ? 'bg-sketchdojo-primary/50 cursor-not-allowed' : 'bg-sketchdojo-primary hover:bg-sketchdojo-primary/90'
-                } text-white text-xs sm:text-sm ${isTyping ? 'opacity-100' : 'opacity-80 hover:opacity-100'}`}
-                disabled={isLoading || (!promptValue.trim() && !imageFile)}
+                className="h-7 sm:h-8 px-3 sm:px-4 rounded-full transition-all duration-300 flex items-center justify-center bg-sketchdojo-primary hover:bg-sketchdojo-primary/90 text-white text-xs sm:text-sm opacity-80 hover:opacity-100"
+                disabled={isLoading}
               >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                    <span>Creating...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center">
-                    <Send className="mr-1 h-3 w-3" />
-                    <span>Create</span>
-                  </div>
-                )}
+                <div className="flex items-center">
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                      <span>Creating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="mr-1 h-3 w-3" />
+                      <span>Create</span>
+                    </>
+                  )}
+                </div>
               </button>
             </div>
           </div>
