@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { ProjectCard } from './project-card';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Filter, Clock, LayoutGrid } from 'lucide-react';
+import { ArrowRight, Filter, LayoutGrid } from 'lucide-react';
 import { SAMPLE_PROJECTS } from '@/components/constants/projects-data';
 
 // Filter types for the project showcase
@@ -202,7 +202,7 @@ export const ProjectsShowcase = () => {
               </div>
               <h3 className="text-xl font-medium text-white mb-2">No projects found</h3>
               <p className="text-white/60 max-w-md mx-auto mb-6">
-                We couldn't find any projects matching your current filters. Try adjusting your filters or create a new project.
+                We couldn&apos;t find any projects matching your current filters. Try adjusting your filters or create a new project.
               </p>
               <div className="flex flex-wrap gap-3 justify-center">
                 <button 

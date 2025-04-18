@@ -10,9 +10,9 @@ interface GtagConsentParams {
 
 interface Gtag {
   (command: 'consent', action: 'update', params: GtagConsentParams): void;
-  (command: 'config', targetId: string, config?: Record<string, any>): void;
-  (command: 'event', eventName: string, eventParams?: Record<string, any>): void;
-  (command: string, ...args: any[]): void;
+  (command: 'config', targetId: string, config?: Record<string, unknown>): void;
+  (command: 'event', eventName: string, eventParams?: Record<string, unknown>): void;
+  (command: string, ...args: unknown[]): void;
 }
 
 // Extend the Window interface to include gtag

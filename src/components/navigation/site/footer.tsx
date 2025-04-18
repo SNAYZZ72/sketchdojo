@@ -4,7 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Mail, AlertCircle, Check, ArrowRight, ExternalLink, Shield } from "lucide-react"
+import { Mail, Check, ArrowRight, ExternalLink, Shield } from "lucide-react"
 
 // Updated social links with better accessibility
 const socialLinks = [
@@ -125,7 +125,7 @@ const NewsBanner = () => {
 const NewsletterForm = () => {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
-  const [error, setError] = useState("");
+
   const [isLoading, setIsLoading] = useState(false);
   
   const validateEmail = (email: string) => {
@@ -135,15 +135,12 @@ const NewsletterForm = () => {
   
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     
     if (!email.trim()) {
-      setError("Please enter your email address");
       return;
     }
     
     if (!validateEmail(email)) {
-      setError("Please enter a valid email address");
       return;
     }
     
@@ -275,7 +272,7 @@ const CookieBanner = () => {
             </h3>
             <p className="text-white/70 text-sm">
               We use cookies to enhance your browsing experience, analyze site traffic, and personalize content.
-              By clicking "Accept All", you consent to our use of cookies as described in our 
+              By clicking &quot;Accept All&quot;, you consent to our use of cookies as described in our 
               <Link href="/site/legal/cookies" className="underline text-white ml-1 hover:text-sketchdojo-primary transition-colors">
                 Cookie Policy
               </Link>.

@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/providers/auth-provider";
 import { createClient } from "@/utils/supabase/client";
@@ -306,7 +305,7 @@ export function CookieConsent() {
                   <p className="text-white/70 text-sm">
                     We use cookies to personalize content, provide social media features, and analyze our traffic. 
                     We also share information about your use of our site with our social media and analytics partners.
-                    You can manage your preferences by clicking "Cookie Settings".
+                    You can manage your preferences by clicking &quot;Cookie Settings&quot;.
                   </p>
                   <div className="mt-2">
                     <Button

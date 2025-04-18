@@ -247,7 +247,7 @@ export default function ResetPasswordPage() {
       setErrorMessage(null);
       
       // Update user's password using the reset token
-      const { data, error } = await supabase.auth.updateUser({
+      const { error } = await supabase.auth.updateUser({
         password: values.password
       });
 

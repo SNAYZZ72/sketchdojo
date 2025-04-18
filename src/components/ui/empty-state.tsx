@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { Button } from "./button"
 
@@ -78,10 +79,14 @@ export function EmptyStateImage({
     >
       {image && (
         <div className="mb-6 max-w-[180px] w-full mx-auto">
-          <img 
+          <Image 
             src={image}
             alt={imageAlt}
+            width={180}
+            height={120}
             className="w-full h-auto"
+            style={{ objectFit: 'contain' }}
+            priority
           />
         </div>
       )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Loader2, Sparkles, Send, Info, Paperclip, X, Image as ImageIcon, Wand2 } from "lucide-react";
+import { Loader2, Sparkles, Send, Info, Paperclip, X, Wand2 } from "lucide-react";
 import { 
   Tooltip,
   TooltipContent,
@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Switch } from "@/components/ui/switch";
 import TextareaAutosize from 'react-textarea-autosize';
-import { Button } from "@/components/ui/button";
+
 import { useAuth } from "@/providers/auth-provider";
 import { useRouter } from "next/navigation";
 import { geminiService } from "@/lib/chat/gemini-service";

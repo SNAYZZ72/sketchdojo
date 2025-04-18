@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useChat } from '@/providers/chat-provider';
 import { Button } from '@/components/ui/button';
-import { Send, ArrowRight } from 'lucide-react';
+import { Send } from 'lucide-react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { storageService, STORAGE_KEYS } from '@/lib/storage-service';
 
@@ -193,7 +193,7 @@ export default function StudioChatRedirect() {
             Welcome to SketchDojo
           </h1>
           <p className="text-white/70 text-base md:text-lg">
-            Let's create your first manga! Start by describing your idea below.
+            Let&apos;s create your first manga! Start by describing your idea below.
           </p>
         </div>
         

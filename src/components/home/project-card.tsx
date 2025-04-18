@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { RefreshCw, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { ProjectPlaceholder } from './project-placeholder';
 
 export interface ProjectCardProps {
