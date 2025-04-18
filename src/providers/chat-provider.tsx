@@ -180,7 +180,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         setCurrentChatState(null);
       }
     }
-  }, [chats, getFromStorage, saveToStorage]);
+  }, [chats, getFromStorage, saveToStorage, currentChat]);
 
   // Create a new chat
   const createChat = useCallback((promptOrTitle?: string): Chat => {
