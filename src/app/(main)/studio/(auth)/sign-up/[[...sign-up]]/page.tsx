@@ -110,7 +110,7 @@ export default function SignUpPage() {
       setIsLoading(true);
       setErrorMessage(null);
       
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
@@ -148,7 +148,7 @@ export default function SignUpPage() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: `${window.location.origin}/site`,
@@ -453,7 +453,7 @@ export default function SignUpPage() {
                 <CheckCircle2 className="h-16 w-16 mx-auto text-green-400 mb-4" />
                 <h3 className="text-white text-xl font-medium mb-2">Account Created Successfully!</h3>
                 <p className="text-white/60 mb-6">
-                  We've sent a confirmation email to <span className="text-white font-medium">{form.getValues("email")}</span>.<br/>
+                  We&apos;ve sent a confirmation email to <span className="text-white font-medium">{form.getValues("email")}</span>.<br/>
                   Please check your inbox and click the verification link.
                 </p>
                 <Button 

@@ -147,7 +147,7 @@ export default function GDPRCompliance() {
       </section>
       
       <section className="mt-6">
-        <h2>11. Children's Data</h2>
+        <h2>11. Children&apos;s Data</h2>
         <p>
           Our services are not intended for children under 16 years of age. We do not knowingly collect personal data from children under 16. If you are under 16, please do not use our services or provide any personal information to us.
         </p>

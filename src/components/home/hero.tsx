@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from 'next/image';
 import { Loader2, Sparkles, Send, Info, Paperclip, X, Wand2 } from "lucide-react";
 import { 
   Tooltip,
@@ -71,9 +72,7 @@ const PromptInput = () => {
   const [promptValue, setPromptValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isEnhancing, setIsEnhancing] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
   const [characterCount, setCharacterCount] = useState(0);
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isPublic, setIsPublic] = useState(true);
   const { user, isLoading: isAuthLoading } = useAuth();
@@ -203,8 +202,7 @@ const PromptInput = () => {
     const files = e.target.files;
     if (files && files.length > 0) {
       const file = files[0];
-      setImageFile(file);
-      
+        
       // Create preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -216,7 +214,6 @@ const PromptInput = () => {
   
   // Remove the selected image
   const removeImage = () => {
-    setImageFile(null);
     setImagePreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -240,7 +237,7 @@ const PromptInput = () => {
                 // Only allow typing if authenticated or checking auth
                 if (user || isAuthLoading) {
                   setPromptValue(e.target.value);
-                  setIsTyping(e.target.value.length > 0);
+                  
                 }
               }}
               onFocus={handlePromptFocus}
@@ -281,10 +278,13 @@ const PromptInput = () => {
             <div className="px-3 sm:px-5 py-2 border-t border-white/10">
               <div className="relative inline-block">
                 <div className="relative group">
-                  <img 
+                  <Image 
                     src={imagePreview} 
                     alt="Attached image" 
                     className="h-16 sm:h-20 w-auto rounded-lg object-cover border border-white/20"
+                    width={80}
+                    height={80}
+                    unoptimized={true}
                   />
                   <button
                     type="button"

@@ -3,9 +3,10 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { storageService, STORAGE_KEYS } from './storage-service';
+import { Chat } from '@/providers/chat-provider';
 
 export const useAutoRedirectFromPrompt = (
-  createChat: (title: string) => any, 
+  createChat: (title: string) => Chat, // Changed from 'any' to 'Chat'
   generateResponse: (prompt: string) => Promise<string | null>,
   generateResponseWithNewChat?: (prompt: string) => Promise<string | null>
 ) => {

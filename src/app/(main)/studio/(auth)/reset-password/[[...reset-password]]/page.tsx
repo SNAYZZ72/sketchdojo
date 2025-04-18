@@ -354,7 +354,7 @@ export default function ResetPasswordPage() {
               <Alert className="bg-green-500/10 border-green-500/20 text-green-400 mb-4">
                 <CheckCircle2 className="h-4 w-4" />
                 <AlertDescription>
-                  Password reset successfully! You'll be redirected to sign in.
+                  Password reset successfully! You&apos;ll be redirected to sign in.
                 </AlertDescription>
               </Alert>
             )}

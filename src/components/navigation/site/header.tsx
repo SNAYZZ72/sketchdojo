@@ -3,11 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
-import { Search, Menu, X, Moon, Sun, ChevronDown, Bell } from "lucide-react";
+import { Search, X, Moon, Sun, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/providers/auth-provider";
-import { createClient } from "@/utils/supabase/client";
 
 // Navigation items
 const navigationItems = [
@@ -127,7 +126,7 @@ export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { user, isLoading, signOut } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
+  //const pathname = usePathname();
   
   // Throttled scroll handler for better performance
   const handleScroll = useCallback(() => {

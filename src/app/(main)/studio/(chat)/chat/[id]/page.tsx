@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { 
   Save, Download, Eye, 
@@ -9,8 +10,7 @@ import {
   AlertCircle, MessageSquare
 } from 'lucide-react';
 import { useChat } from '@/providers/chat-provider';
-import { Message, LoadingMessage } from '@/components/chat/message';
-import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useAutoRedirectFromPrompt } from '@/lib/auto-redirect';
 //import { ChatInputCompact } from '@/components/chat/chat-input-compact';
 import { cn } from '@/lib/utils';
@@ -99,12 +99,12 @@ export default function ChatPage() {
     setInput('');
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  /*const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(input);
     }
-  };
+  };*/
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
@@ -113,7 +113,7 @@ export default function ChatPage() {
   // Adjust zoom in the editor
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 10, 200));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 10, 30));
-  const handleZoomReset = () => setZoom(100);
+  //const handleZoomReset = () => setZoom(100);
 
   const handleDeleteChat = () => {
     if (!currentChat) return;
@@ -395,10 +395,13 @@ export default function ChatPage() {
                             ? "ring-2 sm:ring-4 ring-purple-500 ring-offset-2 sm:ring-offset-4 ring-offset-black/50" 
                             : "border border-white/10 hover:border-white/30"
                         )}>
-                          <img 
+                          <Image 
                             src={panel.url} 
                             alt={`Panel ${panel.panelNumber}`} 
                             className="w-full h-auto bg-black/40 hover:scale-[1.01] transition-transform"
+                            width={800}
+                            height={1200}
+                            unoptimized={true}
                           />
                           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-2 sm:p-4">
                             <div className="p-1 sm:p-2 text-white text-xs sm:text-sm font-medium backdrop-blur-sm bg-black/30 rounded-lg">
@@ -447,10 +450,13 @@ export default function ChatPage() {
                         className="group relative rounded-lg overflow-hidden border border-white/10 hover:border-white/30 transition-all cursor-pointer"
                         onClick={() => setSelectedPanel(index)}
                       >
-                        <img 
+                        <Image 
                           src={panel.url} 
                           alt={`Panel ${panel.panelNumber}`} 
                           className="w-full h-auto aspect-[3/4] object-cover bg-black/40"
+                          width={400}
+                          height={533}
+                          unoptimized
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                           <div className="absolute bottom-0 left-0 right-0 p-2 text-white text-xs sm:text-sm font-medium flex justify-between items-center">
@@ -498,10 +504,13 @@ export default function ChatPage() {
                               : "border-white/10 hover:border-white/30"
                           )}
                         >
-                          <img 
+                          <Image 
                             src={panel.url} 
                             alt={`Thumbnail ${index + 1}`} 
                             className="h-full w-full object-cover" 
+                            width={80}
+                            height={80}
+                            unoptimized
                           />
                         </button>
                       ))}
@@ -548,10 +557,13 @@ export default function ChatPage() {
                             style={{ width: '280px', height: '350px' }}
                             onClick={() => setSelectedEditorPanel(index)}
                           >
-                            <img 
+                            <Image 
                               src={panel.url} 
                               alt={`Panel ${panel.panelNumber}`} 
                               className="w-full h-full object-cover"
+                              width={280}
+                              height={350}
+                              unoptimized={true}
                             />
                             <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm p-2 flex justify-between items-center">
                               <span className="text-white/80 text-xs">Panel {panel.panelNumber}</span>

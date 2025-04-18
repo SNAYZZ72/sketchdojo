@@ -1,5 +1,4 @@
 import React from 'react';
-import { ThemeProvider } from '@/providers/theme-provider';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';

@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { User, BotIcon } from 'lucide-react';
+import Image from 'next/image';
+import { BotIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageProps } from '@/types';
@@ -110,10 +111,14 @@ export function Message({ message }: { message: MessageProps }) {
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
             {message.images.map((image, idx) => (
               <div key={idx} className="relative group">
-                <img 
+                <Image 
                   src={image} 
                   alt={`Image ${idx + 1}`} 
                   className="rounded-md border border-white/20 max-h-96 w-auto object-contain bg-black/60" 
+                  width={600}
+                  height={400}
+                  unoptimized={true}
+                  priority={false}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
                   <div className="absolute bottom-2 right-2 flex gap-2">

@@ -9,7 +9,7 @@ import {
 } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/client";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 type AuthContextType = {
   user: User | null;
@@ -26,13 +26,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const supabase = createClient();
   const router = useRouter();
-  const pathname = usePathname();
+  //const pathname = usePathname();
 
   useEffect(() => {
     // Get session on initial load
     const getSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
         setUser(session?.user || null);
       } catch (error) {

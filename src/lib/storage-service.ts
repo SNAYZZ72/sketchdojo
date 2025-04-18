@@ -8,7 +8,7 @@ class StorageService {
   /**
    * Set an item in localStorage with error handling
    */
-  setItem(key: string, value: any): boolean {
+  setItem<T>(key: string, value: T): boolean { // Changed from 'any' to '<T>'
     try {
       const serialized = typeof value === 'string' ? value : JSON.stringify(value);
       localStorage.setItem(key, serialized);

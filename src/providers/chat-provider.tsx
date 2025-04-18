@@ -85,7 +85,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, []);
   
   // Save data to storage using our storage service
-  const saveToStorage = useCallback((data: any) => {
+  const saveToStorage = useCallback((data: Chat[]) => { // Changed from 'any' to 'Chat[]'
     return storageService.setItem(STORAGE_KEYS.CHATS, data);
   }, []);
   

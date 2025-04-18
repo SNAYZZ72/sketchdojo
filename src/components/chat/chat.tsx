@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { MessageList } from './message-list';
 import { ChatInput } from './chat-input';
 import { ChatMessage } from '@/providers/chat-provider';

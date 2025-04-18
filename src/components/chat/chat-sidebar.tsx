@@ -63,12 +63,7 @@ export function ChatSidebar() {
   
   // Sort chats by most recent
   const sortedChats = [...chats].sort((a, b) => b.updatedAt - a.updatedAt);
-  
-  // Redirect to landing page for a new prompt
-  const handleNewChat = () => {
-    router.push('/');
-  };
-  
+    
   // Format the timestamp to a readable date
   const formatDate = (timestamp: number) => {
     const now = new Date();

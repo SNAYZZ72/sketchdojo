@@ -59,7 +59,7 @@ export default function SignInPage() {
       setIsLoading(true);
       setErrorMessage(null);
       
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
       });
@@ -125,7 +125,7 @@ export default function SignInPage() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: `${window.location.origin}/studio`,
@@ -319,7 +319,7 @@ export default function SignInPage() {
           </CardContent>
           <CardFooter className="flex flex-col items-center space-y-4 border-t border-white/10 pt-6">
             <p className="text-sm text-white/60">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link href="/studio/sign-up" className="text-sketchdojo-primary hover:text-sketchdojo-primary-light hover:underline transition-colors">
                 Sign up
               </Link>
