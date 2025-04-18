@@ -2,12 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Paperclip, Send, ArrowLeft, Save, Download, Share2, Eye, 
-  ChevronDown, ChevronUp, ChevronRight, Sparkles, 
-  Layout, LayoutGrid, Maximize2, Heart, Bookmark, PanelRight,
+  Save, Download, Eye, 
+  ChevronDown, ChevronRight, Layout, LayoutGrid, Maximize2, Heart, Bookmark, PanelRight,
   Edit3, PlusCircle, Move, Copy, Trash, MousePointer, Layers,
   AlertCircle, MessageSquare
 } from 'lucide-react';
@@ -15,7 +12,7 @@ import { useChat } from '@/providers/chat-provider';
 import { Message, LoadingMessage } from '@/components/chat/message';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useAutoRedirectFromPrompt } from '@/lib/auto-redirect';
-import { ChatInputCompact } from '@/components/chat/chat-input-compact';
+//import { ChatInputCompact } from '@/components/chat/chat-input-compact';
 import { cn } from '@/lib/utils';
 import { ChatMessages } from '@/components/chat/chat-messages';
 import { PromptForm } from '@/components/chat/prompt-form';
@@ -23,14 +20,14 @@ import { PromptForm } from '@/components/chat/prompt-form';
 export default function ChatPage() {
   const router = useRouter();
   const params = useParams();
-  const searchParams = useSearchParams();
+  //const searchParams = useSearchParams();
   const chatId = params.id as string;
   const { chats, currentChat, setCurrentChat, generateResponse, generateResponseWithNewChat, createChat, isLoading, deleteChat } = useChat();
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [showMorePanels, setShowMorePanels] = useState(false);
+  //const [showMorePanels, setShowMorePanels] = useState(false);
   const [viewMode, setViewMode] = useState<'vertical' | 'grid'>('vertical');
   const [selectedPanel, setSelectedPanel] = useState<number | null>(null);
   const [activeMode, setActiveMode] = useState<'preview' | 'editor'>('preview');

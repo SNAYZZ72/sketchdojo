@@ -109,7 +109,7 @@ export default function PrivacyPolicy() {
           <li><strong>Objection:</strong> You can object to our processing of your information in certain circumstances.</li>
         </ul>
         <p className="mt-3">
-          To exercise these rights, please contact us using the details provided in the "Contact Us" section.
+          To exercise these rights, please contact us using the details provided in the &quot;Contact Us&quot; section.
         </p>
       </section>
       
@@ -144,7 +144,7 @@ export default function PrivacyPolicy() {
       </section>
       
       <section className="mt-6">
-        <h2>10. Children's Privacy</h2>
+        <h2>10. Children&apos;s Privacy</h2>
         <p>
           Our service is not directed to children under the age of 13, and we do not knowingly collect personal information from children under 13. If we learn we have collected or received personal information from a child under 13 without verification of parental consent, we will delete that information.
         </p>
@@ -153,7 +153,7 @@ export default function PrivacyPolicy() {
       <section className="mt-6">
         <h2>11. Changes to This Privacy Policy</h2>
         <p>
-          We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date at the top of this Privacy Policy.
+          We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the &quot;Last Updated&quot; date at the top of this Privacy Policy.
         </p>
         <p className="mt-3">
           You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.

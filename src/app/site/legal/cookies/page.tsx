@@ -42,7 +42,7 @@ export default function CookiePolicy() {
           </p>
         </div>
         <p>
-          This Cookie Policy explains how SketchDojo ("we", "us", or "our") uses cookies and similar technologies to recognize you when you visit our website and use our services. It explains what these technologies are and why we use them, as well as your rights to control our use of them.
+          This Cookie Policy explains how SketchDojo (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) uses cookies and similar technologies to recognize you when you visit our website and use our services. It explains what these technologies are and why we use them, as well as your rights to control our use of them.
         </p>
         <p>
           Please read this Cookie Policy carefully before using our services. By continuing to browse or use our website, you agree to our use of cookies as described in this Cookie Policy.
@@ -61,10 +61,10 @@ export default function CookiePolicy() {
           Cookies are small data files that are placed on your computer or mobile device when you visit a website. Cookies are widely used by website owners to make their websites work, or to work more efficiently, as well as to provide reporting information.
         </p>
         <p>
-          Cookies set by the website owner (in this case, SketchDojo) are called "first-party cookies". Cookies set by parties other than the website owner are called "third-party cookies". Third-party cookies enable third-party features or functionality to be provided on or through the website (e.g., advertising, interactive content, and analytics).
+          Cookies set by the website owner (in this case, SketchDojo) are called &quot;first-party cookies&quot;. Cookies set by parties other than the website owner are called &quot;third-party cookies&quot;. Third-party cookies enable third-party features or functionality to be provided on or through the website (e.g., advertising, interactive content, and analytics).
         </p>
         <p>
-          In addition to cookies, we may use other similar technologies like web beacons (sometimes called "tracking pixels" or "clear gifs"), browser storage (including local storage and session storage), and application data caches. These technologies are similar to cookies in that they are stored on your device and can be used to store certain information about your activities and preferences.
+          In addition to cookies, we may use other similar technologies like web beacons (sometimes called &quot;tracking pixels&quot; or &quot;clear gifs&quot;), browser storage (including local storage and session storage), and application data caches. These technologies are similar to cookies in that they are stored on your device and can be used to store certain information about your activities and preferences.
         </p>
       </section>
       
@@ -74,7 +74,7 @@ export default function CookiePolicy() {
           <h2 className="text-2xl font-semibold">3. Types of Cookies We Use</h2>
         </div>
         <p>
-          We use the following types of cookies. For each type, we've included information about their purpose and legal basis for processing under applicable data protection laws:
+          We use the following types of cookies. For each type, we&apos;ve included information about their purpose and legal basis for processing under applicable data protection laws:
         </p>
         
         <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 rounded-md p-4 my-4">
@@ -257,7 +257,7 @@ export default function CookiePolicy() {
               5.2 Browser Controls
             </h3>
             <p className="mt-2">
-              Most web browsers allow you to manage your cookie preferences through their settings. You can usually find these settings in the "Options" or "Preferences" menu of your browser. Below are links to instructions for managing cookies in common browsers:
+              Most web browsers allow you to manage your cookie preferences through their settings. You can usually find these settings in the &quot;Options&quot; or &quot;Preferences&quot; menu of your browser. Below are links to instructions for managing cookies in common browsers:
             </p>
             <ul className="list-disc pl-6 mt-2 space-y-1">
               <li><a href="https://support.google.com/chrome/answer/95647" className="text-sketchdojo-primary hover:underline" target="_blank" rel="noopener noreferrer">Google Chrome</a></li>
@@ -292,7 +292,7 @@ export default function CookiePolicy() {
               5.4 Do Not Track
             </h3>
             <p className="mt-2">
-              Some browsers have a "Do Not Track" feature that lets you tell websites that you do not want to have your online activities tracked. These features are not yet uniform across browsers, so we do not currently respond to such signals. However, you can use the various other tools described above to manage your privacy preferences.
+              Some browsers have a &quot;Do Not Track&quot; feature that lets you tell websites that you do not want to have your online activities tracked. These features are not yet uniform across browsers, so we do not currently respond to such signals. However, you can use the various other tools described above to manage your privacy preferences.
             </p>
           </div>
         </div>
@@ -324,7 +324,7 @@ export default function CookiePolicy() {
               Google Analytics collects only the IP address assigned to you on the date you visit our site, rather than your name or other identifying information. We do not combine the information collected through Google Analytics with personally identifiable information.
             </p>
             <p className="mt-2">
-              You can learn more about Google's practices at <a href="https://policies.google.com/technologies/partner-sites" className="text-sketchdojo-primary hover:underline" target="_blank" rel="noopener noreferrer">https://policies.google.com/technologies/partner-sites</a> and opt out by downloading the Google Analytics opt-out browser add-on, available at <a href="https://tools.google.com/dlpage/gaoptout" className="text-sketchdojo-primary hover:underline" target="_blank" rel="noopener noreferrer">https://tools.google.com/dlpage/gaoptout</a>.
+              You can learn more about Google&apos;s practices at <a href="https://policies.google.com/technologies/partner-sites" className="text-sketchdojo-primary hover:underline" target="_blank" rel="noopener noreferrer">https://policies.google.com/technologies/partner-sites</a> and opt out by downloading the Google Analytics opt-out browser add-on, available at <a href="https://tools.google.com/dlpage/gaoptout" className="text-sketchdojo-primary hover:underline" target="_blank" rel="noopener noreferrer">https://tools.google.com/dlpage/gaoptout</a>.
             </p>
           </div>
           

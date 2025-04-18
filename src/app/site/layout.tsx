@@ -40,7 +40,7 @@ const PrivacyAlertBanner = () => {
         <div className="flex-1">
           <h4 className="font-medium">Customize your privacy settings</h4>
           <p className="text-sm text-muted-foreground mt-1">
-            You've accepted cookies, but you can still customize which types of cookies we use.
+            You&apos;ve accepted cookies, but you can still customize which types of cookies we use.
           </p>
           <div className="flex gap-3 mt-3">
             <Link 

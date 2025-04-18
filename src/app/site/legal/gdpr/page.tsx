@@ -58,7 +58,7 @@ export default function GDPRCompliance() {
           <li><strong>Erasure (right to be forgotten):</strong> You can request that we erase your personal data, under certain conditions.</li>
           <li><strong>Restrict processing:</strong> You can request that we restrict the processing of your personal data, under certain conditions.</li>
           <li><strong>Object to processing:</strong> You can object to our processing of your personal data, under certain conditions.</li>
-          <li><strong>Data portability:</strong> You can request that we transfer the data that we've collected to another organization, or directly to you, under certain conditions.</li>
+          <li><strong>Data portability:</strong> You can request that we transfer the data that we&apos;ve collected to another organization, or directly to you, under certain conditions.</li>
           <li><strong>Withdraw consent:</strong> If we rely on your consent to process your personal data, you have the right to withdraw that consent at any time.</li>
         </ul>
         <p className="mt-3">
@@ -135,7 +135,7 @@ export default function GDPRCompliance() {
           To determine the appropriate retention period for personal data, we consider the amount, nature, and sensitivity of the personal data, the potential risk of harm from unauthorized use or disclosure of your personal data, the purposes for which we process your personal data and whether we can achieve those purposes through other means, and the applicable legal requirements.
         </p>
         <p className="mt-3">
-          In some circumstances, you can ask us to delete your data. See the section on "Your Rights" above for more information.
+          In some circumstances, you can ask us to delete your data. See the section on &quot;Your Rights&quot; above for more information.
         </p>
       </section>
       
@@ -169,7 +169,7 @@ export default function GDPRCompliance() {
       <section className="mt-6">
         <h2>13. Changes to This GDPR Compliance Notice</h2>
         <p>
-          We may update this GDPR compliance notice from time to time. When we update this notice, we will revise the "Last Updated" date at the top of this notice and, in some cases, we may provide you with additional notice (such as by sending you a notification or adding a statement to our website's homepage).
+          We may update this GDPR compliance notice from time to time. When we update this notice, we will revise the &quot;Last Updated&quot; date at the top of this notice and, in some cases, we may provide you with additional notice (such as by sending you a notification or adding a statement to our website&#39;s homepage).
         </p>
         <p className="mt-3">
           We encourage you to review this notice regularly to stay informed about our data protection practices.

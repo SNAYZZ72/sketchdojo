@@ -161,8 +161,7 @@ const NewsletterForm = () => {
       setTimeout(() => {
         setSubscribed(false);
       }, 5000);
-    } catch (error) {
-      setError("Something went wrong. Please try again.");
+    } catch {
       setIsLoading(false);
     }
   };
@@ -182,7 +181,7 @@ const NewsletterForm = () => {
         >
           <Check className="w-6 h-6 text-green-400 mx-auto mb-2" />
           <p className="text-white font-medium">Thank you for subscribing!</p>
-          <p className="text-white/70 text-sm mt-1">We've sent a confirmation to your email</p>
+          <p className="text-white/70 text-sm mt-1">We&apos;ve sent a confirmation to your email</p>
         </motion.div>
       ) : (
         <form onSubmit={handleSubscribe} className="relative">
@@ -197,8 +196,6 @@ const NewsletterForm = () => {
               placeholder="Your email address"
               className="w-full py-3 px-5 pl-11 pr-32 rounded-lg bg-white/10 border border-white/20 focus:border-sketchdojo-primary focus:outline-none focus:ring-1 focus:ring-sketchdojo-primary/50 transition-all duration-300 text-white placeholder-white/40"
               aria-label="Email address"
-              aria-invalid={!!error}
-              aria-describedby={error ? "email-error" : undefined}
               required
             />
             <button
@@ -221,17 +218,6 @@ const NewsletterForm = () => {
               )}
             </button>
           </div>
-          
-          {error && (
-            <div
-              id="email-error"
-              className="text-red-400 text-sm mt-2 flex items-center"
-              role="alert"
-            >
-              <AlertCircle className="w-4 h-4 mr-1" />
-              {error}
-            </div>
-          )}
           
           <p className="text-white/40 text-xs mt-3">
             By subscribing, you agree to our <Link href="/site/legal/privacy" className="underline hover:text-white transition-colors">Privacy Policy</Link> and consent to receive updates from SketchDojo.

@@ -14,7 +14,7 @@ export default function TermsOfService() {
       <section className="mt-8">
         <h2>1. Acceptance of Terms</h2>
         <p>
-          By accessing or using SketchDojo ("the Service"), you agree to be bound by these Terms of Service. If you disagree with any part of the terms, you may not access the Service.
+          By accessing or using SketchDojo (&quot;the Service&quot;), you agree to be bound by these Terms of Service. If you disagree with any part of the terms, you may not access the Service.
         </p>
       </section>
       
@@ -38,7 +38,7 @@ export default function TermsOfService() {
       <section className="mt-6">
         <h2>4. User Content</h2>
         <p>
-          You retain all rights to any content you submit, upload, or display on or through the Service ("User Content"). By submitting User Content to the Service, you grant SketchDojo a worldwide, non-exclusive, royalty-free license to use, reproduce, adapt, publish, translate, and distribute your User Content for the purpose of operating and improving the Service.
+          You retain all rights to any content you submit, upload, or display on or through the Service (&quot;User Content&quot;). By submitting User Content to the Service, you grant SketchDojo a worldwide, non-exclusive, royalty-free license to use, reproduce, adapt, publish, translate, and distribute your User Content for the purpose of operating and improving the Service.
         </p>
         <p className="mt-3">
           You represent and warrant that:
@@ -113,7 +113,7 @@ export default function TermsOfService() {
       <section className="mt-6">
         <h2>10. Disclaimer</h2>
         <p>
-          Your use of the Service is at your sole risk. The Service is provided on an "AS IS" and "AS AVAILABLE" basis. The Service is provided without warranties of any kind, whether express or implied.
+          Your use of the Service is at your sole risk. The Service is provided on an &quot;AS IS&quot; and &quot;AS AVAILABLE&quot; basis. The Service is provided without warranties of any kind, whether express or implied.
         </p>
         <p className="mt-3">
           SketchDojo, its subsidiaries, affiliates, and licensors do not warrant that:
