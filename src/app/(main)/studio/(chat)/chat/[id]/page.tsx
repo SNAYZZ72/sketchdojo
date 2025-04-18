@@ -245,27 +245,28 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Main content */}
-      <div className={`flex flex-col md:flex-row flex-1 overflow-hidden`}>
-        {/* Chat section */}
-        <div 
-          className={`w-full md:w-1/3 border-r border-white/10 relative bg-black/50 overflow-hidden flex flex-col
-            transition-all duration-300 ease-in-out 
-            ${isCollapsed ? 'md:w-0 md:border-r-0 h-0 md:h-auto' : 'h-1/2 md:h-auto'}`}
-        >
-          <div className={`overflow-hidden flex flex-col flex-1 ${isCollapsed ? 'hidden' : 'flex'}`}>
-            <div className="flex-1 overflow-auto">
-              <ChatMessages />
+      <div className="flex flex-1 overflow-hidden">
+        {/* Chat Section */}
+        <div className={`${isCollapsed ? 'w-0 overflow-hidden' : 'w-1/3'} transition-all duration-300 border-r border-white/10 flex flex-col bg-black/40 backdrop-blur-sm`}>
+          <div className="p-3 px-4 border-b border-white/10 flex items-center justify-between">
+            <div className="text-white font-medium text-sm flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-purple-500"></div>
+              Chat
             </div>
-            
-            <div className="p-2 sm:p-3 border-t border-white/10">
-              <PromptForm />
-            </div>
+          </div>
+          
+          <div className="flex-1 overflow-auto p-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent" id="chat-messages">
+            <ChatMessages />
+            <div ref={messagesEndRef} />
+          </div>
+          
+          <div className="p-4 border-t border-white/10 bg-black/20">
+            <PromptForm />
           </div>
         </div>
 
-        {/* Editor section */}
-        <div className={`flex-1 flex flex-col ${isCollapsed ? 'w-full' : 'h-1/2 md:h-auto'}`}>
+        {/* Preview/Editor Section */}
+        <div className={`${isCollapsed ? 'w-full' : 'flex-1'} flex flex-col transition-all duration-300`}>
           {/* Tab bar */}
           <div className="bg-black/60 p-2 flex items-center justify-between border-b border-white/10 backdrop-blur-sm">
             <div className="flex bg-black/50 rounded-md overflow-hidden p-0.5 mx-2 sm:mx-4">
@@ -519,103 +520,107 @@ export default function ChatPage() {
             </div>
           )}
           
-          {/* Editor mode */}
+          {/* Editor Mode */}
           {activeMode === 'editor' && (
-            <div className="flex-1 overflow-auto bg-gradient-to-b from-gray-900/80 to-black/90 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-              {/* Editor header */}
-              <div className="sticky top-0 z-10 bg-black/60 backdrop-blur-sm flex items-center justify-between p-2 sm:p-3 border-b border-white/5">
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <div className="bg-purple-600/20 rounded-full h-6 w-6 sm:h-8 sm:w-8 flex items-center justify-center text-purple-400">
-                    <Edit3 className="h-3 w-3 sm:h-4 sm:w-4" />
+            <div className="flex flex-1 overflow-hidden">
+              {/* Editor Canvas */}
+              <div className="flex-1 bg-gradient-to-b from-gray-800 to-gray-900 overflow-auto relative p-4">
+                <div 
+                  className="min-h-full w-full min-w-full flex items-center justify-center relative"
+                  style={{
+                    backgroundImage: 'radial-gradient(circle, rgba(75, 75, 75, 0.1) 1px, transparent 1px)',
+                    backgroundSize: '20px 20px'
+                  }}
+                >
+                  <div 
+                    className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-transform origin-center"
+                    style={{ transform: `translate(-50%, -50%) scale(${zoom/100})` }}
+                  >
+                    {/* Canvas Content */}
+                    <div className="w-[1200px] h-[800px] flex flex-wrap gap-4 p-8 content-start">
+                      {panelsToDisplay.length > 0 ? (
+                        panelsToDisplay.map((panel, index) => (
+                          <div 
+                            key={panel.id} 
+                            className={cn(
+                              "group border relative cursor-move", 
+                              selectedEditorPanel === index 
+                                ? "border-purple-500 shadow-xl shadow-purple-500/20"
+                                : "border-white/10 hover:border-white/30"
+                            )}
+                            style={{ width: '280px', height: '350px' }}
+                            onClick={() => setSelectedEditorPanel(index)}
+                          >
+                            <img 
+                              src={panel.url} 
+                              alt={`Panel ${panel.panelNumber}`} 
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm p-2 flex justify-between items-center">
+                              <span className="text-white/80 text-xs">Panel {panel.panelNumber}</span>
+                              <div className="flex gap-1">
+                                <button className="w-6 h-6 flex items-center justify-center text-white/60 hover:text-white">
+                                  <Copy className="h-3 w-3" />
+                                </button>
+                                <button className="w-6 h-6 flex items-center justify-center text-white/60 hover:text-white">
+                                  <Trash className="h-3 w-3" />
+                                </button>
+                                <button className="w-6 h-6 flex items-center justify-center text-white/60 hover:text-white">
+                                  <Edit3 className="h-3 w-3" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <div className="text-center text-white/40 max-w-md">
+                            <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-black/30 flex items-center justify-center">
+                              <Layers className="h-10 w-10 text-white/20" />
+                            </div>
+                            <h3 className="text-white/80 text-lg mb-2">No Manga Panels Yet</h3>
+                            <p className="text-white/40 text-sm mb-4">Start a conversation in the chat to generate manga panels that you can edit here.</p>
+                            <Button 
+                              className="bg-purple-600 hover:bg-purple-700"
+                              onClick={() => setActiveMode('preview')}
+                            >
+                              Switch to Preview
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-white/90 text-xs sm:text-sm font-medium">Manga Editor</span>
-                    <span className="text-white/40 text-[10px] sm:text-xs">{panelsToDisplay.length} panels</span>
-                  </div>
-                </div>
-                
-                {/* Editor controls */}
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <button className="bg-black/40 hover:bg-black/60 rounded-full h-6 w-6 sm:h-8 sm:w-8 flex items-center justify-center text-white/70 hover:text-white transition-colors">
-                    <PlusCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-                  </button>
-                  <button className="bg-purple-600 hover:bg-purple-700 rounded-full h-6 sm:h-8 px-2 sm:px-3 flex items-center gap-1 text-white shadow-lg shadow-purple-600/20 transition-colors">
-                    <Save className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="text-[10px] sm:text-xs">Save</span>
-                  </button>
                 </div>
               </div>
               
-              {/* Editor content */}
-              <div className="flex flex-col items-center gap-4 sm:gap-6 px-3 sm:px-6 py-4 sm:py-8">
-                {panelsToDisplay.length > 0 ? (
-                  panelsToDisplay.map((panel, index) => (
-                    <div 
-                      key={`editor-${panel.id}`} 
-                      className="w-full max-w-3xl group relative"
-                      onClick={() => setSelectedEditorPanel(index)}
-                    >
-                      <div className={cn(
-                        "transition-all duration-300 rounded-xl overflow-hidden shadow-xl sm:shadow-2xl",
-                        selectedEditorPanel === index 
-                          ? "ring-2 sm:ring-4 ring-purple-500 ring-offset-2 sm:ring-offset-4 ring-offset-black/50" 
-                          : "border border-white/10 hover:border-white/30"
-                      )}>
-                        <div className="relative" style={{ transform: `scale(${zoom/100})`, transformOrigin: 'top center' }}>
-                          <img 
-                            src={panel.url} 
-                            alt={`Panel ${panel.panelNumber}`} 
-                            className="w-full h-auto bg-black/40"
-                          />
-                          
-                          {/* Edit overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-                        </div>
-                        
-                        {/* Editing tools - only show when selected */}
-                        {selectedEditorPanel === index && (
-                          <div className="absolute top-3 right-3 z-10 flex flex-col gap-2 bg-black/80 rounded-lg border border-white/10 p-1.5 shadow-xl">
-                            <button className="p-1.5 hover:bg-white/10 rounded-md text-white/80 hover:text-white transition-colors">
-                              <Move className="h-4 w-4" />
-                            </button>
-                            <button className="p-1.5 hover:bg-white/10 rounded-md text-white/80 hover:text-white transition-colors">
-                              <Copy className="h-4 w-4" />
-                            </button>
-                            <button className="p-1.5 hover:bg-white/10 rounded-md text-white/80 hover:text-white transition-colors">
-                              <Trash className="h-4 w-4" />
-                            </button>
-                            <button className="p-1.5 hover:bg-white/10 rounded-md text-white/80 hover:text-white transition-colors">
-                              <Layers className="h-4 w-4" />
-                            </button>
-                            <button className="p-1.5 hover:bg-white/10 rounded-md text-white/80 hover:text-white transition-colors">
-                              <MousePointer className="h-4 w-4" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <div className="mt-2 sm:mt-3 flex justify-between">
-                        <span className="text-white/60 text-xs sm:text-sm">
-                          Panel {index + 1} of {panelsToDisplay.length}
-                        </span>
-                        <div className="flex gap-1">
-                          <button className="text-purple-400 hover:text-purple-300 p-1">
-                            <Edit3 className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center text-white/50 py-10 sm:py-20 px-4 flex flex-col items-center justify-center gap-3 sm:gap-4 bg-black/30 rounded-xl max-w-md mx-auto mt-6 sm:mt-10 border border-white/5">
-                    <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-black/50 flex items-center justify-center">
-                      <Edit3 className="h-6 w-6 sm:h-8 sm:w-8 text-white/30" />
-                    </div>
-                    <div className="space-y-1 sm:space-y-2">
-                      <h3 className="text-white text-sm sm:text-base font-medium">No manga panels to edit</h3>
-                      <p className="text-white/50 text-xs sm:text-sm">Start a conversation to generate manga panels that you can edit here.</p>
+              {/* Editor Tools Sidebar */}
+              <div className="w-64 border-l border-white/10 bg-black/50 p-3 backdrop-blur-sm flex flex-col">
+                <div className="text-white/80 font-medium text-sm mb-4 pb-2 border-b border-white/10">Editor Tools</div>
+                
+                <div className="space-y-4">
+                  <div className="p-2 bg-black/20 rounded-lg">
+                    <div className="text-white/60 text-xs mb-2">Tools</div>
+                    <div className="grid grid-cols-4 gap-1">
+                      <button className="flex flex-col items-center justify-center p-2 rounded bg-purple-600/20 hover:bg-purple-600/30 text-white/80">
+                        <MousePointer className="h-4 w-4 mb-1" />
+                        <span className="text-[10px]">Select</span>
+                      </button>
+                      <button className="flex flex-col items-center justify-center p-2 rounded bg-black/30 hover:bg-black/40 text-white/60">
+                        <Move className="h-4 w-4 mb-1" />
+                        <span className="text-[10px]">Move</span>
+                      </button>
+                      <button className="flex flex-col items-center justify-center p-2 rounded bg-black/30 hover:bg-black/40 text-white/60">
+                        <PlusCircle className="h-4 w-4 mb-1" />
+                        <span className="text-[10px]">Add</span>
+                      </button>
+                      <button className="flex flex-col items-center justify-center p-2 rounded bg-black/30 hover:bg-black/40 text-white/60">
+                        <Trash className="h-4 w-4 mb-1" />
+                        <span className="text-[10px]">Delete</span>
+                      </button>
                     </div>
                   </div>
-                )}
+                </div>
               </div>
             </div>
           )}
