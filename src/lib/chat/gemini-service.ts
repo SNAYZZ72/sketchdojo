@@ -27,7 +27,7 @@ class GeminiService {
 
   constructor() {
     this.ai = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '');
-    this.model = 'gemini-1.5-pro';
+    this.model = 'gemini-2.0-flash-thinking-exp-01-21';
     this.imageGenerationModel = 'gemini-1.5-pro-vision'; // Use vision model as fallback
   }
 

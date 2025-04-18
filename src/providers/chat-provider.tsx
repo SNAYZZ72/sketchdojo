@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback 
 import { v4 as uuidv4 } from 'uuid';
 import { geminiService } from '@/lib/chat/gemini-service';
 import { stabilityService } from '@/lib/chat/stability-service';
+import { storageService, STORAGE_KEYS } from '@/lib/storage-service';
 
 // Define types for our chat
 export type MessageRole = 'user' | 'assistant';
@@ -35,13 +36,10 @@ interface ChatContextType {
   generateImage: (prompt: string) => Promise<string | null>;
   isLoading: boolean;
   deleteChat: (chatId: string) => Promise<void>;
-  reloadChatsFromLocalStorage: () => boolean;
+  reloadChatsFromStorage: () => boolean;
   exportAllChats: () => string;
   importChats: (jsonData: string) => boolean;
 }
-
-// Storage key for consistent access
-const STORAGE_KEY = 'sketchdojo-chats';
 
 // Create the context
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -81,37 +79,22 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   
-  // Wrapped localStorage functions with error handling
-  
-  // Get data from localStorage
+  // Get data from storage using our storage service
   const getFromStorage = useCallback(() => {
-    try {
-      const data = localStorage.getItem(STORAGE_KEY);
-      return data ? JSON.parse(data) : null;
-    } catch (error) {
-      console.error('Failed to get data from localStorage:', error);
-      return null;
-    }
+    return storageService.getItem<Chat[]>(STORAGE_KEYS.CHATS, true);
   }, []);
   
-  // Save data to localStorage
+  // Save data to storage using our storage service
   const saveToStorage = useCallback((data: any) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      console.log('Saved chats to localStorage:', data.length);
-      return true;
-    } catch (error) {
-      console.error('Failed to save to localStorage:', error);
-      return false;
-    }
+    return storageService.setItem(STORAGE_KEYS.CHATS, data);
   }, []);
   
-  // Load chats from localStorage on initial render
+  // Load chats from storage on initial render
   useEffect(() => {
     const loadChats = () => {
       const savedData = getFromStorage();
       if (savedData && Array.isArray(savedData)) {
-        console.log('Loaded chats from localStorage:', savedData.length);
+        console.log('Loaded chats from storage:', savedData.length);
         setChats(savedData);
         
         // Set the most recent chat as current if no current chat is set
@@ -125,7 +108,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       }
       
       // No saved data or error - initialize with empty state
-      console.log('No chats found in localStorage, initializing empty state');
+      console.log('No chats found in storage, initializing empty state');
       setChats([]);
       setCurrentChatState(null);
       setIsInitialized(true);
@@ -135,13 +118,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     loadChats();
   }, [getFromStorage, currentChat]);
 
-  // Synchronize chats with localStorage
+  // Synchronize chats with storage
   const synchronizeChats = useCallback(() => {
     if (!isInitialized) return false;
     return saveToStorage(chats);
   }, [chats, isInitialized, saveToStorage]);
 
-  // Save chats to localStorage whenever they change
+  // Save chats to storage whenever they change
   useEffect(() => {
     if (isInitialized) {
       synchronizeChats();
@@ -163,12 +146,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     } else {
       console.warn(`Chat with ID ${chatId} not found in state`);
       
-      // Check localStorage as a fallback
+      // Check storage as a fallback
       const savedData = getFromStorage();
       if (savedData && Array.isArray(savedData)) {
         const savedChat = savedData.find(c => c.id === chatId);
         if (savedChat) {
-          console.log('Found chat in localStorage, setting as current:', savedChat.id);
+          console.log('Found chat in storage, setting as current:', savedChat.id);
           
           // Update the chats array to include this chat
           const updatedChats = [...chats];
@@ -179,7 +162,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           
           setCurrentChatState(savedChat);
         } else {
-          console.error(`Chat with ID ${chatId} not found in localStorage either`);
+          console.error(`Chat with ID ${chatId} not found in storage either`);
         }
       }
     }
@@ -213,7 +196,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     // Add to the beginning to make newest chats appear first
     setChats(prev => {
       const updatedChats = [newChat, ...prev];
-      // Force save to localStorage immediately to prevent race conditions
+      // Force save to storage immediately to prevent race conditions
       saveToStorage(updatedChats);
       return updatedChats;
     });
@@ -253,7 +236,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         updatedChats.unshift(newChat);
       }
       
-      // Force save to localStorage immediately
+      // Force save to storage immediately
       saveToStorage(updatedChats);
       return updatedChats;
     });
@@ -356,7 +339,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         setCurrentChat(chatToUse.id);
       }
       
-      // Re-synchronize with localStorage
+      // Re-synchronize with storage
       synchronizeChats();
       
       return chatToUse.id;
@@ -435,7 +418,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       const finalMessages = [...currentMessages, assistantMessage];
       updateChat(newChat.id, { messages: finalMessages });
       
-      // Re-synchronize with localStorage
+      // Re-synchronize with storage
       synchronizeChats();
       
       return newChat.id;
@@ -471,7 +454,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     // Remove from chats array
     setChats(prev => {
       const updatedChats = prev.filter(chat => chat.id !== chatId);
-      // Force synchronize with localStorage
+      // Force synchronize with storage
       saveToStorage(updatedChats);
       return updatedChats;
     });
@@ -488,9 +471,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
   }, [chats, currentChat, saveToStorage]);
 
-  // Reload chats from localStorage
-  const reloadChatsFromLocalStorage = useCallback((): boolean => {
-    console.log('Reloading chats from localStorage');
+  // Reload chats from storage
+  const reloadChatsFromStorage = useCallback((): boolean => {
+    console.log('Reloading chats from storage');
     
     const savedData = getFromStorage();
     if (savedData && Array.isArray(savedData)) {
@@ -566,7 +549,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     generateImage,
     isLoading,
     deleteChat,
-    reloadChatsFromLocalStorage,
+    reloadChatsFromStorage,
     exportAllChats,
     importChats
   };

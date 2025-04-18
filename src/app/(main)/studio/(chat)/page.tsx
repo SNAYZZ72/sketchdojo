@@ -6,12 +6,13 @@ import { useChat } from '@/providers/chat-provider';
 import { Button } from '@/components/ui/button';
 import { Send, ArrowRight } from 'lucide-react';
 import TextareaAutosize from 'react-textarea-autosize';
+import { storageService, STORAGE_KEYS } from '@/lib/storage-service';
 
 export default function StudioChatRedirect() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const directProcess = searchParams.get('directProcess') === 'true';
-  const { currentChat, chats, createChat, generateResponse, generateResponseWithNewChat, reloadChatsFromLocalStorage } = useChat();
+  const { currentChat, chats, createChat, generateResponse, generateResponseWithNewChat, reloadChatsFromStorage } = useChat();
   const [promptInput, setPromptInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [processingPrompt, setProcessingPrompt] = useState(false);
@@ -25,26 +26,26 @@ export default function StudioChatRedirect() {
     console.log("StudioChatRedirect: total chats =", chats.length);
     
     // Force reload from localStorage to ensure we have the latest chats
-    reloadChatsFromLocalStorage();
-  }, [directProcess, currentChat, chats.length, reloadChatsFromLocalStorage]);
+    reloadChatsFromStorage();
+  }, [directProcess, currentChat, chats.length, reloadChatsFromStorage]);
   
   // First check for an initial prompt and process it,
   // or redirect to the most recent chat if one exists
   useEffect(() => {
     const initializeChat = async () => {
       try {
-        // Check if there's an initial prompt stored in localStorage
-        const initialPrompt = localStorage.getItem('initial_prompt');
-        console.log("StudioChatRedirect: initialPrompt from localStorage =", initialPrompt ? initialPrompt.slice(0, 30) + "..." : "null");
+        // Check if there's an initial prompt stored in storage service
+        const initialPrompt = storageService.getItem<string>(STORAGE_KEYS.INITIAL_PROMPT, false);
+        console.log("StudioChatRedirect: initialPrompt from storage =", initialPrompt ? (initialPrompt as string).slice(0, 30) + "..." : "null");
         
         if (initialPrompt) {
           console.log("StudioChatRedirect: Found initial prompt, processing...");
           setStatusMessage('Creating your manga...');
           setProcessingPrompt(true);
           
-          // Clear it from localStorage before processing to prevent duplicates
-          localStorage.removeItem('initial_prompt');
-          console.log("StudioChatRedirect: Cleared initial_prompt from localStorage");
+          // Clear it from storage before processing to prevent duplicates
+          storageService.removeItem(STORAGE_KEYS.INITIAL_PROMPT);
+          console.log("StudioChatRedirect: Cleared initial_prompt from storage");
           
           // If directProcess is true, we want to immediately generate and redirect
           if (directProcess) {
@@ -54,7 +55,7 @@ export default function StudioChatRedirect() {
             try {
               // ALWAYS create a new chat for each prompt using our special function
               console.log("StudioChatRedirect: Direct processing enabled, creating new chat...");
-              const chatId = await generateResponseWithNewChat(initialPrompt);
+              const chatId = await generateResponseWithNewChat(initialPrompt as string);
               console.log("StudioChatRedirect: generateResponseWithNewChat returned chatId:", chatId);
               
               if (chatId) {
@@ -68,7 +69,7 @@ export default function StudioChatRedirect() {
               } else {
                 // Fallback if generation fails - create a new chat
                 console.log("StudioChatRedirect: Error during generation, falling back to createChat");
-                const newChat = createChat(initialPrompt);
+                const newChat = createChat(initialPrompt as string);
                 console.log("StudioChatRedirect: Created fallback chat with ID:", newChat.id);
                 
                 // Allow a short delay for state updates to complete
@@ -80,7 +81,7 @@ export default function StudioChatRedirect() {
             } catch (error) {
               console.error("StudioChatRedirect: Error processing prompt for direct redirect:", error);
               // Create a new chat and redirect even if there's an error
-              const newChat = createChat(initialPrompt);
+              const newChat = createChat(initialPrompt as string);
               console.log("StudioChatRedirect: Created error fallback chat with ID:", newChat.id);
               
               // Allow a short delay for state updates to complete
@@ -95,8 +96,8 @@ export default function StudioChatRedirect() {
           
           // If not direct processing, continue with normal flow but still use the new function
           setStatusMessage('Generating your manga...');
-          console.log("StudioChatRedirect: Generating response with new chat for prompt:", initialPrompt.slice(0, 30));
-          const chatId = await generateResponseWithNewChat(initialPrompt);
+          console.log("StudioChatRedirect: Generating response with new chat for prompt:", (initialPrompt as string).slice(0, 30));
+          const chatId = await generateResponseWithNewChat(initialPrompt as string);
           
           if (chatId) {
             // Allow a short delay for state updates to complete
@@ -108,7 +109,7 @@ export default function StudioChatRedirect() {
           } else {
             // If generation failed, still create a new chat and redirect
             console.log("StudioChatRedirect: Error during generation");
-            const newChat = createChat(initialPrompt);
+            const newChat = createChat(initialPrompt as string);
             console.log("StudioChatRedirect: Created fallback chat with ID:", newChat.id);
             
             // Allow a short delay for state updates to complete

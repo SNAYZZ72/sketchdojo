@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/providers/auth-provider";
 import { useRouter } from "next/navigation";
 import { geminiService } from "@/lib/chat/gemini-service";
+import { storageService, STORAGE_KEYS } from "@/lib/storage-service";
 
 // Enhanced prompt examples with categories and icons
 const promptCategories = [
@@ -122,9 +123,9 @@ const PromptInput = () => {
       
       try {
         console.log("Hero: Submitting prompt:", promptValue.slice(0, 30));
-        // For authenticated users, store the prompt in localStorage
-        localStorage.setItem('initial_prompt', promptValue);
-        console.log("Hero: Saved prompt to localStorage, redirecting with directProcess=true");
+        // For authenticated users, store the prompt in localStorage via storageService
+        storageService.setItem(STORAGE_KEYS.INITIAL_PROMPT, promptValue);
+        console.log("Hero: Saved prompt to storage service, redirecting with directProcess=true");
         
         // IMPORTANT: Make sure directProcess is set to true to ensure a new chat is created
         router.push('/studio/chat?directProcess=true');
@@ -167,9 +168,9 @@ const PromptInput = () => {
       
       try {
         console.log("Hero: Selected example prompt:", prompt.slice(0, 30));
-        // Store the prompt in localStorage
-        localStorage.setItem('initial_prompt', prompt);
-        console.log("Hero: Saved example to localStorage, redirecting with directProcess=true");
+        // Store the prompt using storageService
+        storageService.setItem(STORAGE_KEYS.INITIAL_PROMPT, prompt);
+        console.log("Hero: Saved example to storage service, redirecting with directProcess=true");
         
         // IMPORTANT: Make sure directProcess is set to true to ensure a new chat is created
         router.push('/studio/chat?directProcess=true');
