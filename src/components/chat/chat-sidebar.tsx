@@ -33,7 +33,7 @@ export function ChatSidebar() {
   
   const router = useRouter();
   const pathname = usePathname();
-  const { chats, deleteChat, reloadChatsFromLocalStorage, exportAllChats, importChats } = useChat();
+  const { chats, deleteChat, reloadChatsFromStorage, exportAllChats, importChats } = useChat();
   const { signOut } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   
@@ -98,7 +98,7 @@ export function ChatSidebar() {
   const handleReloadChats = async () => {
     setIsReloading(true);
     try {
-      const success = reloadChatsFromLocalStorage();
+      const success = reloadChatsFromStorage();
       if (success) {
         toast.success('Chats reloaded successfully');
       } else {
