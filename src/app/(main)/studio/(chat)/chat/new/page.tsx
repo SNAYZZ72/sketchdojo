@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { storageService, STORAGE_KEYS } from '@/lib/storage-service';
 import { ChatLoadingState } from '@/components/chat/chat-loading-state';
 
 /**

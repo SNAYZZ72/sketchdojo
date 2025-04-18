@@ -35,7 +35,6 @@ export default function ChatPage() {
     generateResponseWithNewChat, 
     createChat, 
     deleteChat, 
-    isLoading,
     reloadChatsFromStorage
   } = useChat();
 
@@ -179,8 +178,8 @@ export default function ChatPage() {
           </div>
           <h2 className="text-2xl font-bold text-white mb-3">Chat Not Found</h2>
           <p className="text-white/70 mb-6">
-            We couldn't find the chat you're looking for (ID: {chatId.substring(0, 8)}...).
-            It might have been deleted or hasn't been fully saved yet.
+            We couldn&apos;t find the chat you&apos;re looking for (ID: {chatId.substring(0, 8)}...).
+            It might have been deleted or hasn&apos;t been fully saved yet.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button

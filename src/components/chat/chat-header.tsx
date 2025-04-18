@@ -18,7 +18,6 @@ interface ChatHeaderProps {
  * Header component for the chat interface displaying title and action buttons
  */
 export function ChatHeader({ 
-  chat, 
   onToggleSidebar, 
   onDelete, 
   isCollapsed 
