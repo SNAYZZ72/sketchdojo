@@ -2,35 +2,20 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useChat } from '@/providers/chat-provider';
-import { ChatLoadingState } from '@/components/chat/chat-loading-state';
 
-/**
- * Simple redirect page for /studio/(chat)
- * Redirects users to the chat interface or home page based on their chat history
- */
-export default function StudioChatRedirect() {
+export default function ChatRedirectPage() {
   const router = useRouter();
-  const { chats, isLoading } = useChat();
   
   useEffect(() => {
-    // Don't redirect until chat data is loaded
-    if (isLoading) return;
-    
-    // Simple redirect logic with a short delay to avoid flickering
-    const redirectTimeout = setTimeout(() => {
-      if (chats.length > 0) {
-        // If they have chats, redirect to their most recent chat
-        const sortedChats = [...chats].sort((a, b) => b.updatedAt - a.updatedAt);
-        router.push(`/studio/chat/${sortedChats[0].id}`);
-      } else {
-        // If they don't have any chats, redirect to main chat landing page
-        router.push('/studio/chat/new');
-      }
-    }, 500);
-    
-    return () => clearTimeout(redirectTimeout);
-  }, [chats, router, isLoading]);
-
-  return <ChatLoadingState message="Redirecting to your manga workspace..." />;
+    router.push('/studio/chat/new');
+  }, [router]);
+  
+  return (
+    <div className="h-screen flex items-center justify-center">
+      <div className="flex items-center">
+        <div className="w-8 h-8 rounded-full bg-sketchdojo-primary animate-pulse mr-3"></div>
+        <div className="text-xl font-medium">Redirecting to Chat...</div>
+      </div>
+    </div>
+  );
 }
