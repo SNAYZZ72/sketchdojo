@@ -21,14 +21,15 @@ export const useAutoRedirectFromPrompt = (
         console.log("Found initial prompt in auto-redirect hook, processing...");
         
         try {
+          // Clear the prompt from storage before processing to prevent duplicates
+          storageService.removeItem(STORAGE_KEYS.INITIAL_PROMPT);
+          console.log("Cleared initial_prompt from storage");
+          
           // Always use generateResponseWithNewChat if available to ensure a fresh chat
           if (generateResponseWithNewChat) {
-            // Clear the prompt from storage before processing to prevent duplicates
-            storageService.removeItem(STORAGE_KEYS.INITIAL_PROMPT);
-            console.log("Cleared initial_prompt from storage");
-            
             // Generate the response with a new chat
-            console.log("Using generateResponseWithNewChat for:", typeof initialPrompt === 'string' ? initialPrompt.slice(0, 30) : 'Invalid prompt', "...");
+            console.log("Using generateResponseWithNewChat for:", 
+              typeof initialPrompt === 'string' ? initialPrompt.slice(0, 30) : 'Invalid prompt', "...");
             const chatId = await generateResponseWithNewChat(initialPrompt as string);
             
             if (chatId) {
@@ -39,14 +40,8 @@ export const useAutoRedirectFromPrompt = (
               console.log("Generated manga in hook with new chat, redirecting to:", chatId);
               router.push(`/studio/chat/${chatId}`);
               return;
-            } else {
-              console.error("Failed to generate response with new chat");
             }
           } else {
-            // Clear the prompt from storage before processing to prevent duplicates
-            storageService.removeItem(STORAGE_KEYS.INITIAL_PROMPT);
-            console.log("Cleared initial_prompt from storage");
-            
             // Fallback to original approach
             console.log("Using fallback approach for prompt");
             const promptString = initialPrompt as string;
@@ -76,10 +71,8 @@ export const useAutoRedirectFromPrompt = (
           // Ensure prompt is cleared even on error
           storageService.removeItem(STORAGE_KEYS.INITIAL_PROMPT);
           
-          // Create a new chat and redirect as fallback
-          const newChat = createChat((initialPrompt as string).slice(0, 30));
-          console.log("Created fallback chat with ID:", newChat.id);
-          router.push(`/studio/chat/${newChat.id}`);
+          // If everything fails, redirect home to try again
+          router.push('/');
           return;
         }
       }
@@ -98,4 +91,4 @@ export const useAutoRedirectFromPrompt = (
       clearTimeout(checkAgainTimeout);
     };
   }, [createChat, generateResponse, generateResponseWithNewChat, router]);
-}; 
+};
