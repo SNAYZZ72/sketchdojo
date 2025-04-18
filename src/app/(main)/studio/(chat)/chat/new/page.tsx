@@ -13,12 +13,9 @@ export default function NewChatPage() {
   const router = useRouter();
   
   useEffect(() => {
-    // Create a new chat directly instead of redirecting back to the main chat page
-    // This prevents the circular redirect that causes build issues
+    // Simple redirect to the chat landing page
     const redirectTimeout = setTimeout(() => {
-      // Redirect to a specific chat ID or handle new chat creation here
-      // For now, we'll just stay on this page until proper implementation
-      // This breaks the redirect loop between /studio/chat/ and /studio/chat/new
+      router.push('/studio/chat/');
     }, 500);
     
     return () => clearTimeout(redirectTimeout);
