@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, KeyboardEvent } from 'react';
-import { Send, Paperclip, MicIcon, PlusCircle, Image, SmileIcon } from 'lucide-react';
+import { Send, Paperclip, MicIcon, Image, SmileIcon } from 'lucide-react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -172,6 +172,7 @@ export function ChatInput({
                     variant="ghost"
                     className="h-8 w-8 rounded-full text-gray-500 dark:text-white/60 hover:bg-gray-100 dark:hover:bg-white/10"
                   >
+                    {/* eslint-disable-next-line jsx-a11y/alt-text */}
                     <Image className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>

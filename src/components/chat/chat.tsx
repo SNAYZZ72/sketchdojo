@@ -6,7 +6,6 @@ import { ChatInput } from './chat-input';
 import { ChatMessage } from '@/providers/chat-provider';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { Paperclip } from 'lucide-react';
 
 interface ChatProps {
   messages: ChatMessage[];

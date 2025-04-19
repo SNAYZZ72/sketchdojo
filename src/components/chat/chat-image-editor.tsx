@@ -29,7 +29,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ImagePanel } from './chat-image-gallery';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Tooltip,
   TooltipContent,
@@ -66,7 +66,7 @@ export function ChatImageEditor({
   onZoomChange
 }: ChatImageEditorProps) {
   const [activeEditorTool, setActiveEditorTool] = useState<'select' | 'move' | 'add' | 'delete'>('select');
-  const [isPanelFullscreen, setIsPanelFullscreen] = useState(false);
+  const [, setIsPanelFullscreen] = useState(false);
   const [undoHistory, setUndoHistory] = useState<string[]>([]);
   const [redoHistory, setRedoHistory] = useState<string[]>([]);
   const [panelWidth, setPanelWidth] = useState<string>("280");
@@ -115,7 +115,7 @@ export function ChatImageEditor({
   };
 
   // Function to edit a panel
-  const handleEditPanel = (e: React.MouseEvent, index: number) => {
+  const handleEditPanel = (e: React.MouseEvent) => {
     e.stopPropagation();
     // Would implement actual edit functionality here
   };
@@ -167,7 +167,7 @@ export function ChatImageEditor({
   };
   
   // Function for mouse down on panel to start dragging
-  const handlePanelMouseDown = (e: React.MouseEvent, index: number) => {
+  const handlePanelMouseDown = (e: React.MouseEvent) => {
     if (activeEditorTool === 'move') {
       e.preventDefault();
       setIsDragging(true);
@@ -458,7 +458,7 @@ export function ChatImageEditor({
                     )}
                     style={{ width: '280px', height: '350px' }}
                     onClick={() => onSelectPanel(index)}
-                    onMouseDown={(e) => handlePanelMouseDown(e, index)}
+                    onMouseDown={handlePanelMouseDown}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -516,7 +516,7 @@ export function ChatImageEditor({
                             <TooltipTrigger asChild>
                               <button 
                                 className="w-6 h-6 flex items-center justify-center text-white/60 hover:text-white rounded-full hover:bg-white/10 transition-colors"
-                                onClick={(e) => handleEditPanel(e, index)}
+                                onClick={handleEditPanel}
                                 aria-label="Edit panel"
                               >
                                 <Edit3 className="h-3 w-3" />

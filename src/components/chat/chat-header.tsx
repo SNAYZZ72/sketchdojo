@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Chat } from '@/providers/chat-provider';
-import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import {
   Tooltip,

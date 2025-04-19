@@ -187,24 +187,14 @@ const PromptInput = () => {
   };
   
   // Handle selecting an example prompt
-  const selectExample = async (prompt: string) => {
-    handleAuthAction(async () => {
+  const selectExample = (prompt: string) => {
+    handleAuthAction(() => {
+      // Just set the prompt value in the input field without auto-submitting
       setPromptValue(prompt);
       
-      // Set loading state
-      setIsLoading(true);
-      
-      try {
-        console.log("Hero: Selected example prompt:", prompt.slice(0, 30));
-        // Store the prompt using storageService
-        storageService.setItem(STORAGE_KEYS.INITIAL_PROMPT, prompt);
-        console.log("Hero: Saved example to storage service, redirecting with directProcess=true");
-        
-        // Use the navigation handler
-        await handleNavigation('new');
-      } catch (error) {
-        console.error('Error handling example selection:', error);
-        setIsLoading(false);
+      // Focus on the input field to allow user to edit if desired
+      if (inputRef.current) {
+        inputRef.current.focus();
       }
     });
   };

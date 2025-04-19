@@ -249,6 +249,7 @@ export function ChatInputCompact({
             size="icon"
             className="h-7 w-7 rounded-full text-gray-500 dark:text-white/60 hover:bg-gray-100 dark:hover:bg-white/10"
           >
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
             <Image className="h-3.5 w-3.5" />
           </Button>
           <Button 

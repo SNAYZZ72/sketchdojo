@@ -19,7 +19,6 @@ import {
   Menu,
   X,
   Search,
-  Filter,
   SlidersHorizontal
 } from 'lucide-react';
 import { useChat } from '@/providers/chat-provider';
