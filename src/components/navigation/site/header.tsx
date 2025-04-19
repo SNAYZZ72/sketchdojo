@@ -9,12 +9,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/providers/auth-provider";
 
 // Navigation items
-const navigationItems = [
-  { name: "Features", href: "#features" },
-  { name: "Pricing", href: "#pricing" },
-  { name: "Showcase", href: "#showcase" },
-  { name: "Community", href: "#community" },
-];
+
 
 // Skip to content component for accessibility
 const SkipToContent = () => (
@@ -233,17 +228,7 @@ export function Header() {
 
           {/* Main navigation - desktop */}
           <nav className="hidden md:flex items-center space-x-1">
-            {navigationItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={(e) => scrollToSection(e, item.href)}
-                className="relative px-3 py-2 text-sm font-medium text-white/80 hover:text-white transition-colors duration-200 group rounded-md"
-              >
-                <span className="relative z-10">{item.name}</span>
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-sketchdojo-primary to-sketchdojo-accent transform origin-left transition-transform duration-300 scale-x-0 group-hover:scale-x-100"></span>
-              </Link>
-            ))}
+            
           </nav>
 
           {/* Right side actions */}
@@ -371,16 +356,7 @@ export function Header() {
             <div className="min-h-screen flex flex-col justify-center items-center px-4 py-24 space-y-8">
               {/* Mobile Navigation Links */}
               <nav className="flex flex-col items-center space-y-6 mb-8 w-full">
-                {navigationItems.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={(e) => scrollToSection(e, item.href)}
-                    className="text-xl text-white/90 hover:text-sketchdojo-primary transition-colors duration-200 py-2 w-full text-center"
-                  >
-                    {item.name}
-                  </Link>
-                ))}
+                
               </nav>
               
               {/* Mobile Auth Links - conditionally rendered */}

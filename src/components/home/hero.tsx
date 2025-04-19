@@ -18,56 +18,6 @@ import { geminiService } from "@/lib/chat/gemini-service";
 import { storageService, STORAGE_KEYS } from "@/lib/storage-service";
 import { useChat } from "@/providers/chat-provider";
 
-// Enhanced prompt examples with categories and icons
-const promptCategories = [
-  {
-    category: "Popular Genres",
-    examples: [
-      { 
-        id: 1, 
-        text: "Aventure futuriste", 
-        prompt: "Un samouraï cybernétique dans un Tokyo futuriste, néons lumineux et pluie artificielle",
-        icon: "🌆"
-      },
-      { 
-        id: 2, 
-        text: "Romance historique", 
-        prompt: "Une rencontre romantique entre deux personnages dans le Japon féodal, sous la floraison des cerisiers",
-        icon: "🌸" 
-      },
-      { 
-        id: 3, 
-        text: "Fantasy épique", 
-        prompt: "Un ninja aux pouvoirs mystiques affrontant un dragon ancestral dans un temple oublié",
-        icon: "🐉" 
-      },
-    ]
-  },
-  {
-    category: "Everyday Life",
-    examples: [
-      { 
-        id: 4, 
-        text: "Slice of life", 
-        prompt: "Une journée tranquille dans un café de quartier, ambiance chaleureuse et personnages expressifs",
-        icon: "☕" 
-      },
-      { 
-        id: 5, 
-        text: "Action intense", 
-        prompt: "Un duel de sabre sous la pluie, deux silhouettes s'affrontant avec détermination",
-        icon: "⚔️" 
-      },
-      { 
-        id: 6, 
-        text: "Science-fiction", 
-        prompt: "Une astronaute explorant une planète inconnue avec une faune et flore extraterrestre",
-        icon: "🚀" 
-      }
-    ]
-  }
-];
-
 // PromptInput component with enhanced UI
 const PromptInput = () => {
   const [promptValue, setPromptValue] = useState("");
@@ -111,7 +61,6 @@ const PromptInput = () => {
     action();
   };
   
-  
   // Handle focus on the prompt input
   const handlePromptFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
     if (isAuthLoading) return;
@@ -133,30 +82,24 @@ const PromptInput = () => {
       try {
         console.log("Hero: Submitting prompt:", promptValue.slice(0, 30));
         
-        // Create chat first before navigation
-        const newChat = await createChat(promptValue);
+        // Create a new chat with the prompt
+        const newChat = createChat(promptValue);
+        console.log("Hero: Created new chat with ID:", newChat.id);
         
-        // Add the user's message to the chat
+        // Store initial message
         await updateChatAndSave(newChat.id, {
-          messages: [{
-            id: Math.random().toString(36).substring(2, 15),
-            role: 'user',
-            content: promptValue,
-            timestamp: Date.now()
-          }]
+          messages: [
+            {
+              id: "initial",
+              role: "user",
+              content: promptValue,
+              timestamp: Date.now()
+            }
+          ]
         });
         
-        // Force storage sync
-        synchronizeChats();
-        
-        // Delay to ensure storage operations complete
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Store the chat ID instead of the prompt
-        storageService.setItem(STORAGE_KEYS.INITIAL_CHAT_ID, newChat.id);
-        
-        // Use the navigation handler
-        await handleNavigation(newChat.id);
+        // Navigate to the new chat page
+        handleNavigation(newChat.id);
       } catch (error) {
         console.error('Error handling prompt submission:', error);
         setIsLoading(false);
@@ -189,12 +132,35 @@ const PromptInput = () => {
   // Handle selecting an example prompt
   const selectExample = (prompt: string) => {
     handleAuthAction(() => {
-      // Just set the prompt value in the input field without auto-submitting
       setPromptValue(prompt);
       
-      // Focus on the input field to allow user to edit if desired
-      if (inputRef.current) {
-        inputRef.current.focus();
+      // Set loading state
+      setIsLoading(true);
+      
+      try {
+        console.log("Hero: Selected example prompt:", prompt.slice(0, 30));
+        
+        // Create a new chat with the example prompt
+        const newChat = createChat(prompt);
+        console.log("Hero: Created new chat with example prompt, ID:", newChat.id);
+        
+        // Store initial message
+        updateChatAndSave(newChat.id, {
+          messages: [
+            {
+              id: "initial",
+              role: "user",
+              content: prompt,
+              timestamp: Date.now()
+            }
+          ]
+        }).then(() => {
+          // Navigate to the new chat page
+          handleNavigation(newChat.id);
+        });
+      } catch (error) {
+        console.error('Error handling example selection:', error);
+        setIsLoading(false);
       }
     });
   };
@@ -221,7 +187,7 @@ const PromptInput = () => {
     const files = e.target.files;
     if (files && files.length > 0) {
       const file = files[0];
-        
+      
       // Create preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -256,7 +222,6 @@ const PromptInput = () => {
                 // Only allow typing if authenticated or checking auth
                 if (user || isAuthLoading) {
                   setPromptValue(e.target.value);
-                  
                 }
               }}
               onFocus={handlePromptFocus}
@@ -297,13 +262,10 @@ const PromptInput = () => {
             <div className="px-3 sm:px-5 py-2 border-t border-white/10">
               <div className="relative inline-block">
                 <div className="relative group">
-                  <Image 
+                  <img 
                     src={imagePreview} 
                     alt="Attached image" 
                     className="h-16 sm:h-20 w-auto rounded-lg object-cover border border-white/20"
-                    width={80}
-                    height={80}
-                    unoptimized={true}
                   />
                   <button
                     type="button"
@@ -417,29 +379,6 @@ const PromptInput = () => {
           </div>
         </div>
       </form>
-      
-      {/* Example prompts section */}
-      <div className="mt-6 sm:mt-10 flex flex-col items-center space-y-4 sm:space-y-6">
-        <h3 className="text-white/90 font-medium text-sm sm:text-base">Try these examples:</h3>
-        
-        {promptCategories.map((category, index) => (
-          <div key={index} className="w-full">
-            <h4 className="text-xs sm:text-sm text-white/70 mb-2 sm:mb-3 text-center">{category.category}</h4>
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-              {category.examples.map((example) => (
-                <button
-                  key={example.id}
-                  onClick={() => selectExample(example.prompt)}
-                  className="px-3 sm:px-4 py-2 sm:py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs sm:text-sm transition-all duration-300 text-white/90 hover:text-white hover:border-white/20 hover:shadow-md hover:shadow-sketchdojo-primary/10 flex items-center"
-                >
-                  <span className="mr-1 sm:mr-2">{example.icon}</span>
-                  {example.text}
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 };

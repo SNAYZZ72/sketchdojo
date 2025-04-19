@@ -1,4 +1,13 @@
 import type { Config } from "tailwindcss";
+import { fontFamily } from "tailwindcss/defaultTheme";
+import plugin from "tailwindcss/plugin";
+
+// Define types for plugin utilities
+type PluginUtils = {
+	addUtilities: (utilities: Record<string, Record<string, string>> | Record<string, Record<string, string>>[]) => void;
+	theme: (path: string, defaultValue?: any) => any;
+	e: (selector: string) => string;
+};
 
 export default {
 	darkMode: "class",
@@ -159,7 +168,12 @@ export default {
         		shimmer: {
           			'0%': { backgroundPosition: '-200% 0' },
           			'100%': { backgroundPosition: '200% 0' },
-        		}
+        		},
+                gradient: {
+                    '0%': { backgroundPosition: '0% 50%' },
+                    '50%': { backgroundPosition: '100% 50%' },
+                    '100%': { backgroundPosition: '0% 50%' }
+                }
     		},
     		animation: {
     			'accordion-down': 'accordion-down 0.2s ease-out',
@@ -172,8 +186,11 @@ export default {
     			'scroll': 'scroll 40s linear infinite',
     			'scroll-reverse': 'scrollReverse 40s linear infinite',
     			'pulse': 'pulse 3s ease-in-out infinite',
+    			'pulse-slow': 'pulse 8s ease-in-out infinite',
     			'glow': 'glow 3s ease-in-out infinite',
     			'shimmer': 'shimmer 3s linear infinite',
+                'gradient': 'gradient 6s ease infinite',
+                'gradient-slow': 'gradient 12s ease infinite'
     		},
     		backgroundImage: {
         		'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
@@ -187,11 +204,81 @@ export default {
         		'none': 'none',
         		'blur': 'blur(8px)',
       		},
+            // Animation delay utilities
+            animationDelay: {
+                '500': '500ms',
+                '1000': '1000ms',
+                '1500': '1500ms',
+                '2000': '2000ms',
+                '3000': '3000ms',
+            },
+            // Background size utilities
+            backgroundSize: {
+                '200': '200% 200%',
+            }
     	}
     },
 	plugins: [
 		require("tailwindcss-animate"),
 		// If you want to add backdrop filter support
 		// require('tailwindcss-backdrop-filter'),
+        // Add support for animation delays
+        function({ addUtilities, theme, e }: PluginUtils) {
+            const animationDelayUtilities = Object.entries(theme('animationDelay') as Record<string, string>).map(
+                ([key, value]) => ({
+                    [`.${e(`animation-delay-${key}`)}`]: { animationDelay: value },
+                })
+            );
+            
+            addUtilities(animationDelayUtilities);
+        },
+        // Add support for background size
+        function({ addUtilities, theme, e }: PluginUtils) {
+            const bgSizeUtilities = Object.entries(theme('backgroundSize') as Record<string, string>).map(
+                ([key, value]) => ({
+                    [`.${e(`bg-size-${key}`)}`]: { backgroundSize: value },
+                })
+            );
+            
+            addUtilities(bgSizeUtilities);
+        },
+        plugin(function({ addUtilities, theme, e }: PluginUtils) {
+            const animationDelayUtilities: Record<string, Record<string, string>> = {};
+            const delayValues = theme('animationDelay', {
+                '100': '100ms',
+                '200': '200ms',
+                '300': '300ms',
+                '400': '400ms',
+                '500': '500ms',
+                '600': '600ms',
+                '700': '700ms',
+                '800': '800ms',
+                '900': '900ms',
+                '1000': '1000ms',
+            });
+
+            Object.entries(delayValues as Record<string, string>).forEach(([key, value]) => {
+                animationDelayUtilities[`.${e(`delay-${key}`)}`] = {
+                    'animation-delay': value,
+                };
+            });
+
+            addUtilities(animationDelayUtilities);
+        }),
+        plugin(function({ addUtilities }: PluginUtils) {
+            const backgroundUtilities = {
+                '.bg-size-200': {
+                    'background-size': '200% 200%',
+                },
+                '.bg-size-100': {
+                    'background-size': '100% 100%',
+                },
+                '.animate-gradient': {
+                    'animation': 'gradient 8s ease infinite',
+                },
+            };
+
+            addUtilities(backgroundUtilities);
+        }),
 	],
 } satisfies Config;

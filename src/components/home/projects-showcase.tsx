@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ProjectCard } from './project-card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Filter, LayoutGrid } from 'lucide-react';
-import { SAMPLE_PROJECTS } from '@/components/constants/projects-data';
+import { SAMPLE_PROJECTS, getProjects, Project } from '@/components/constants/projects-data';
 
 // Filter types for the project showcase
 type FilterType = 'my-projects' | 'latest' | 'featured';
@@ -13,31 +13,51 @@ export const ProjectsShowcase = () => {
   const [activeFilter, setActiveFilter] = useState<FilterType>('my-projects');
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  // State to hold the projects, initialized with empty array
+  const [projects, setProjects] = useState<Project[]>([]);
+  // Loading state for initial data fetch
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Fetch projects on component mount
+  useEffect(() => {
+    // Get projects from localStorage via our getProjects function
+    const userProjects = getProjects();
+    
+    // If we have user projects, use those; otherwise fall back to sample data
+    if (userProjects.length > 0) {
+      setProjects(userProjects);
+    } else {
+      setProjects(SAMPLE_PROJECTS);
+    }
+    
+    setIsLoading(false);
+  }, []);
   
   // Get unique project types for filtering
   const projectTypes = Array.from(
-    new Set(SAMPLE_PROJECTS.map(project => project.type))
+    new Set(projects.map(project => project.type))
   ).filter(Boolean) as string[];
   
   // Function to filter projects based on the selected filters
   const getFilteredProjects = () => {
-    let filtered = [...SAMPLE_PROJECTS];
+    let filtered = [...projects];
     
     // Apply main filter (my-projects, latest, featured)
     switch (activeFilter) {
       case 'my-projects':
-        // In a real app, you'd filter by the current user's projects
-        filtered = SAMPLE_PROJECTS;
+        // Show all user projects
+        filtered = projects;
         break;
       case 'latest':
-        // Sort by most recent first
-        filtered = [...SAMPLE_PROJECTS].sort((a, b) => {
-          // This is a simple string comparison. In a real app, you'd use timestamps
-          return b.lastEdited.localeCompare(a.lastEdited);
-        });
+        // Sort by most recent first using actual timestamps
+        filtered = [...projects].sort((a, b) => b.updatedAt - a.updatedAt);
         break;
       case 'featured':
-        filtered = SAMPLE_PROJECTS.filter(project => project.featured);
+        filtered = projects.filter(project => project.featured);
+        // If no featured projects, show most recent
+        if (filtered.length === 0 && projects.length > 0) {
+          filtered = [...projects].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 3);
+        }
         break;
     }
     
@@ -60,23 +80,64 @@ export const ProjectsShowcase = () => {
     }
   };
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <section className="py-20 -mt-1 relative bg-[#080808]" id="projects">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex justify-center items-center">
+          <div className="w-10 h-10 border-4 border-sketchdojo-primary/30 border-t-sketchdojo-primary rounded-full animate-spin"></div>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="py-20 relative bg-[#080808]" id="projects">
-      {/* Background elements */}
+    <section className="py-20 -mt-1 relative bg-[#080808]" id="projects">
+      {/* Enhanced Background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 left-1/4 w-64 h-64 bg-sketchdojo-primary/20 rounded-full blur-3xl opacity-60"></div>
-        <div className="absolute bottom-20 right-1/4 w-72 h-72 bg-sketchdojo-accent/20 rounded-full blur-3xl opacity-60"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-radial from-transparent to-black/90 opacity-70"></div>
-        {/* Grid overlay */}
-        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-30"></div>
+        {/* Section transition gradient - smoothly blends with hero section */}
+        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black to-transparent z-10"></div>
+        
+        {/* Dynamic animated gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-transparent to-blue-900/20 animate-gradient-slow"></div>
+        
+        {/* Large primary glow effect */}
+        <div className="absolute -top-40 left-1/4 w-96 h-96 bg-sketchdojo-primary/20 rounded-full blur-3xl opacity-60 animate-pulse-slow"></div>
+        
+        {/* Secondary glow effect */}
+        <div className="absolute -bottom-20 right-1/4 w-96 h-96 bg-sketchdojo-accent/20 rounded-full blur-3xl opacity-60 animate-pulse-slow animation-delay-1000"></div>
+        
+        {/* Tertiary glow spots */}
+        <div className="absolute top-1/3 left-10 w-32 h-32 bg-purple-600/20 rounded-full blur-xl opacity-50 animate-float"></div>
+        <div className="absolute bottom-1/4 right-16 w-40 h-40 bg-blue-500/20 rounded-full blur-xl opacity-40 animate-float animation-delay-2000"></div>
+        
+        {/* Small accent particles */}
+        <div className="absolute top-1/4 right-1/3 w-6 h-6 bg-sketchdojo-primary/30 rounded-full blur-sm opacity-70 animate-float animation-delay-500"></div>
+        <div className="absolute bottom-1/3 left-1/5 w-4 h-4 bg-sketchdojo-accent/40 rounded-full blur-sm opacity-60 animate-float animation-delay-1500"></div>
+        <div className="absolute top-2/3 right-1/5 w-8 h-8 bg-purple-400/30 rounded-full blur-sm opacity-70 animate-float animation-delay-3000"></div>
+        
+        {/* Radial gradient for depth */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-radial from-transparent to-black/90 opacity-80"></div>
+        
+        {/* Subtle manga-style line pattern overlay */}
+        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-repeat opacity-30 mix-blend-overlay"></div>
+        
+        {/* Noise texture for film grain effect */}
+        <div className="absolute inset-0 bg-[url('/noise.png')] bg-repeat opacity-5 mix-blend-overlay"></div>
+        
+        {/* Optional: subtle horizontal lines like manga panels */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent bg-size-200 opacity-20"></div>
       </div>
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="flex flex-col items-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80">
-            Discover Manga Projects
+          {/* Improved title with animated gradient and glow effect */}
+          <h2 className="text-3xl md:text-5xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-sketchdojo-primary via-white to-sketchdojo-accent animate-gradient relative">
+            <span className="absolute -inset-1 bg-sketchdojo-primary/10 blur-xl rounded-full opacity-75"></span>
+            <span className="relative">Discover Manga Projects</span>
           </h2>
-          <p className="text-white/70 text-center max-w-2xl mb-8">
+          
+          <p className="text-white/80 text-center max-w-2xl mb-8 text-base md:text-lg">
             Explore a variety of AI-powered manga projects created by our community and get inspired for your next creation
           </p>
           
@@ -92,7 +153,7 @@ export const ProjectsShowcase = () => {
               }
               isActive={activeFilter === 'my-projects'} 
               onClick={() => setActiveFilter('my-projects')}
-              count={SAMPLE_PROJECTS.length}
+              count={projects.length}
             />
             <FilterButton 
               label="Latest" 
@@ -104,7 +165,7 @@ export const ProjectsShowcase = () => {
               }
               isActive={activeFilter === 'latest'} 
               onClick={() => setActiveFilter('latest')}
-              count={SAMPLE_PROJECTS.length}
+              count={projects.length}
             />
             <FilterButton 
               label="Featured" 
@@ -115,7 +176,7 @@ export const ProjectsShowcase = () => {
               }
               isActive={activeFilter === 'featured'} 
               onClick={() => setActiveFilter('featured')}
-              count={SAMPLE_PROJECTS.filter(p => p.featured).length}
+              count={projects.filter(p => p.featured).length}
             />
             <FilterButton 
               label={showFilters ? "Hide Filters" : "More Filters"} 
@@ -127,7 +188,7 @@ export const ProjectsShowcase = () => {
           
           {/* Additional type filters */}
           <AnimatePresence>
-            {showFilters && (
+            {showFilters && projectTypes.length > 0 && (
               <motion.div 
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
@@ -183,6 +244,8 @@ export const ProjectsShowcase = () => {
                   imageUrl={project.imageUrl}
                   lastEdited={project.lastEdited}
                   href={project.href}
+                  featured={project.featured}
+                  type={project.type}
                 />
               ))}
             </div>
@@ -215,7 +278,7 @@ export const ProjectsShowcase = () => {
                   Clear filters
                 </button>
                 <a 
-                  href="/studio/projects/new" 
+                  href="/studio/chat" 
                   className="px-4 py-2 bg-gradient-to-r from-sketchdojo-primary to-sketchdojo-accent text-white rounded-md hover:shadow-lg hover:shadow-sketchdojo-primary/20 transition-all"
                 >
                   Create new project
@@ -228,7 +291,7 @@ export const ProjectsShowcase = () => {
         {/* View all projects button */}
         <div className="flex justify-center mt-12">
           <a 
-            href="/studio/projects" 
+            href="/studio/chat" 
             className="relative flex items-center gap-2 py-3 px-8 rounded-full bg-gradient-to-r from-sketchdojo-primary to-sketchdojo-accent text-white font-medium transition-all duration-300 group hover:shadow-lg hover:shadow-sketchdojo-primary/30 hover:-translate-y-0.5"
           >
             <span className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-sketchdojo-primary to-sketchdojo-accent opacity-50 blur-sm animate-pulse"></span>
