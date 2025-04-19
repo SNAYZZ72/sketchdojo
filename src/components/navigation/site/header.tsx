@@ -91,7 +91,7 @@ const UserDropdown = () => {
           >
             <div className="py-1">
               <Link
-                href="/studio"
+                href="/studio/profile"
                 className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-sketchdojo-primary/20 transition-colors duration-200"
                 onClick={() => setIsOpen(false)}
               >
@@ -392,7 +392,7 @@ export function Header() {
                 ) : user ? (
                   <>
                     <Link
-                      href="/studio"
+                      href="/studio/profile"
                       className="text-xl text-white/90 hover:text-sketchdojo-primary transition-colors duration-300 w-full text-center py-2"
                       onClick={() => setIsMenuOpen(false)}
                     >
